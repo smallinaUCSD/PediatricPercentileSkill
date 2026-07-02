@@ -47,3 +47,21 @@ object imported from the engine) and must not import or depend on
 calculation chainable purely through JSON, the same way an agent invokes
 them (adapter CLI output piped into `growth.py`'s CLI input), and keeps
 the engine's test surface (`tests/golden/`) independent of adapter code.
+
+## Adding an eval scenario
+
+See `EVALUATION.md` and `evals/scenarios/` for the schema. Expected
+values in a scenario's `scoring` block should be computed by actually
+running `scripts/growth.py` on the scenario's input (not hand-derived),
+same standard as `tests/golden/`, even though `evals/` isn't
+CODEOWNER-protected the same way. Capture a real agent's response into
+`evals/responses/<id>.txt` before claiming a scenario passes — a scenario
+with no captured response is untested, not passing.
+
+## Releasing
+
+Version is declared in four places and should move together:
+`pyproject.toml`, `CITATION.cff`, `.claude-plugin/plugin.json`, and the
+matching entry in `.claude-plugin/marketplace.json`. Update
+`CHANGELOG.md` in the same commit. `claude plugin validate .` should pass
+before tagging.

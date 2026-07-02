@@ -27,3 +27,7 @@ agent to exfiltrate data or run unintended commands). Mitigations here:
   (see `CONTRIBUTING.md`) so a compromised contribution can't silently
   alter expected clinical outputs.
 - Review the diff of any release before upgrading, same as any dependency.
+- Installed via `.claude-plugin/marketplace.json`, a plugin is pinned to
+  the `version` string in `.claude-plugin/plugin.json` (bumped on
+  `CHANGELOG.md`-worthy releases) — you only receive updates when that
+  version changes, not on every commit to this repo.

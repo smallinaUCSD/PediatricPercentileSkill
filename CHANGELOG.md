@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.1.0] - 2026-07-02
 
 ### Added
 - Repo scaffold: uv-managed Python project, directory layout, MIT license.
@@ -50,3 +50,11 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   led to a `SKILL.md` guardrail fix, re-verified to pass. Both the
   original failing response and the fixed passing response are committed
   for auditability.
+- `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` —
+  installable as a Claude Code plugin (`/plugin marketplace add
+  smallinaUCSD/PediatricPercentileSkill`, `/plugin install
+  growth-percentile@growth-percentile-skill`), in addition to dropping
+  the repo into a skills directory directly. Both manifests verified
+  against a live install/uninstall cycle, not just schema-checked.
+- README installation section, clinical-use disclaimer, and contributing/
+  citation pointers for the public v0.1.0 release.

@@ -11,15 +11,32 @@ standards — using frozen, tested, deterministic code, not model arithmetic.
 
 ## Status
 
-Phases 1-3 complete: the calculation engine (`scripts/growth.py`), the
-three ingestion adapters (`adapters/fhir_r4.py`, `adapters/synthea.py`,
-`adapters/flat.py`), `SKILL.md`, an end-to-end demo (`demo/warren_synthea.md`),
-and an agent-behavioral eval suite (`evals/`, `EVALUATION.md`) are
-implemented and tested (68 unit/integration tests, all passing) —
-including against real Synthea-generated FHIR and CSV fixtures, not
-synthetic-looking hand-written ones. See `references/` for the locked
-design and the project plan for the phased roadmap. Phase 4 (publish) is
-next.
+v0.1.0. The calculation engine (`scripts/growth.py`), the three ingestion
+adapters (`adapters/fhir_r4.py`, `adapters/synthea.py`, `adapters/flat.py`),
+`SKILL.md`, a Claude Code plugin manifest, an end-to-end demo
+(`demo/warren_synthea.md`), and an agent-behavioral eval suite (`evals/`,
+`EVALUATION.md`) are implemented and tested (68 unit/integration tests,
+all passing) — including against real Synthea-generated FHIR and CSV
+fixtures, not synthetic-looking hand-written ones. See `references/` for
+the locked design and `CHANGELOG.md` for what shipped in each phase.
+
+## Installation
+
+**As a Claude Code plugin** (recommended — gives you `/plugin update`):
+
+```
+/plugin marketplace add smallinaUCSD/PediatricPercentileSkill
+/plugin install growth-percentile@growth-percentile-skill
+```
+
+**As a raw skill**, for any skill-compatible agent: drop this repo's
+folder into the agent's skills directory (e.g. `~/.claude/skills/`) —
+`SKILL.md` is discovered automatically. See `SKILL.md` for the workflow
+an agent follows, and `demo/warren_synthea.md` for a full worked example.
+
+Either way, the underlying engine needs [`uv`](https://docs.astral.sh/uv/)
+on the machine that runs it (see Development setup below) — the plugin/skill
+install step does not bundle a Python environment.
 
 ## Why
 
@@ -74,10 +91,6 @@ uv run adapters/synthea.py tests/fixtures/synthea_patients.csv tests/fixtures/sy
 uv run scripts/growth.py /tmp/records.json
 ```
 
-As a skill, drop this repo's folder into an agent's skills directory
-(e.g. `~/.claude/skills/`) — see `SKILL.md` for the workflow an agent
-follows, and `demo/warren_synthea.md` for a full worked example.
-
 ## Evaluation
 
 `EVALUATION.md` documents an agent-behavioral eval suite — five scenarios
@@ -90,6 +103,26 @@ computing outside the audited engine. Re-run with:
 ```bash
 uv run evals/run_eval.py --all
 ```
+
+## Contributing
+
+See `CONTRIBUTING.md` — in particular, `tests/golden/` and `references/data/`
+are frozen and CODEOWNER-protected; read that file before touching either.
+
+## Disclaimer
+
+This tool computes growth percentiles; it does not diagnose, and it is
+not a substitute for clinical judgment. It has not been evaluated or
+cleared by any regulatory body (e.g. FDA) as a medical device. v1
+deliberately does not correct for prematurity, apply condition-specific
+growth charts, or compute growth velocity — see `references/METHODOLOGY.md`
+for the full list of what's in and out of scope. Percentile results should
+be reviewed by a qualified clinician, especially for `implausible_value`
+or `reference_unavailable` flagged results.
+
+## Citation
+
+See `CITATION.cff`.
 
 ## License
 

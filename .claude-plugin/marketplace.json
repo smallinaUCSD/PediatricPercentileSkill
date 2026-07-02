@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "growth-percentile-skill",
+  "owner": {
+    "name": "Seshu Mallina"
+  },
+  "description": "Single-plugin marketplace for the growth-percentile skill: CDC/WHO pediatric growth percentiles from a deterministic, tested engine.",
+  "plugins": [
+    {
+      "name": "growth-percentile",
+      "source": "./",
+      "description": "Computes pediatric growth percentiles and z-scores against CDC and WHO growth standards from FHIR, Synthea, or flat-file patient data.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "keywords": [
+        "pediatrics",
+        "growth-chart",
+        "cdc",
+        "who",
+        "percentile",
+        "z-score",
+        "fhir",
+        "healthcare"
+      ]
+    }
+  ]
+}

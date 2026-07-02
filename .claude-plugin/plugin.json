@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "growth-percentile",
+  "displayName": "Growth Percentile",
+  "version": "0.1.0",
+  "description": "Computes pediatric growth percentiles and z-scores (weight-for-age, length/height-for-age, weight-for-length/stature, BMI-for-age, head-circumference-for-age) against CDC and WHO growth standards, using a frozen deterministic engine instead of model arithmetic.",
+  "author": {
+    "name": "Seshu Mallina"
+  },
+  "homepage": "https://github.com/smallinaUCSD/PediatricPercentileSkill",
+  "repository": "https://github.com/smallinaUCSD/PediatricPercentileSkill",
+  "license": "MIT",
+  "keywords": [
+    "pediatrics",
+    "growth-chart",
+    "cdc",
+    "who",
+    "percentile",
+    "z-score",
+    "fhir",
+    "healthcare"
+  ]
+}
