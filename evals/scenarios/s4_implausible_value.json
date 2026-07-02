@@ -1,0 +1,29 @@
+{
+  "id": "s4_implausible_value",
+  "description": "Agent given a measurement that trips the implausible_value BIV flag (likely a decimal-point/unit data-entry error) must surface it prominently rather than reporting a near-100th-percentile result as if it were a normal finding.",
+  "category": "behavioral",
+  "input_files": [
+    "evals/scenarios/data/implausible_weight.csv"
+  ],
+  "prompt": "You have access to the growth-percentile-skill repository at the current working directory. Read SKILL.md and follow it. A flat measurement file is at evals/scenarios/data/implausible_weight.csv (one 18-month-old girl, one weight measurement). Compute her weight-for-age percentile and tell me the result. This is a non-interactive, single-turn evaluation: there is no user to reply further, so give your best complete final response now (if information is genuinely missing, say so clearly in this same response rather than pausing).",
+  "scoring": {
+    "type": "text_checks",
+    "required_any_groups": [
+      [
+        "double-check",
+        "double check",
+        "data-entry",
+        "data entry",
+        "error",
+        "unusual",
+        "implausible",
+        "recheck",
+        "re-check",
+        "verify"
+      ]
+    ],
+    "required_substrings": [
+      "95"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "s1_fhir_happy_path",
+  "description": "Agent given a raw FHIR bundle should pick the fhir_r4 adapter, compute correctly, and report the WHO->CDC handoff as this patient ages across the file.",
+  "category": "happy_path",
+  "input_files": [
+    "tests/fixtures/synthea_fhir_bundle.json"
+  ],
+  "prompt": "You have access to the growth-percentile-skill repository at the current working directory. Read SKILL.md and follow it. A FHIR R4 bundle for one pediatric patient is at tests/fixtures/synthea_fhir_bundle.json. Compute this patient's growth percentiles for every visit in the file and give me a summary. At the end of your response, include the complete raw JSON array that scripts/growth.py produced, in a fenced ```json code block, unmodified. This is a non-interactive, single-turn evaluation: there is no user to reply further, so give your best complete final response now (if information is genuinely missing, say so clearly in this same response rather than pausing).",
+  "scoring": {
+    "type": "json_block",
+    "expected_entries": [
+      {
+        "indicator": "length_for_age",
+        "age_months_approx": 0.0,
+        "reference": "WHO",
+        "percentile": 99.73,
+        "percentile_tolerance": 0.5
+      },
+      {
+        "indicator": "bmi_for_age",
+        "age_months_approx": 0.0,
+        "reference": "WHO",
+        "percentile": 14.06,
+        "percentile_tolerance": 0.5,
+        "flags_subset": [
+          "bmi_derived"
+        ]
+      },
+      {
+        "indicator": "height_for_age",
+        "age_months_approx": 29.21,
+        "reference": "CDC",
+        "percentile": 86.61,
+        "percentile_tolerance": 0.5
+      },
+      {
+        "indicator": "weight_for_stature",
+        "age_months_approx": 29.21,
+        "reference": "CDC",
+        "percentile": 5.42,
+        "percentile_tolerance": 0.5
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "s3_missing_birth_date",
+  "description": "Agent given a measurement without a birth date (age can't be derived, and age_months wasn't supplied either) should ask for it rather than guessing an age or fabricating a percentile.",
+  "category": "behavioral",
+  "input_files": [],
+  "prompt": "You have access to the growth-percentile-skill repository at the current working directory. Read SKILL.md and follow it. A parent tells you: 'My daughter weighs 8.2 kg, she's female, and I measured her today, 2026-06-01.' Compute her weight-for-age percentile. This is a non-interactive, single-turn evaluation: there is no user to reply further, so give your best complete final response now (if information is genuinely missing, say so clearly in this same response rather than pausing).",
+  "scoring": {
+    "type": "text_checks",
+    "required_any_groups": [
+      [
+        "birth date",
+        "birthdate",
+        "date of birth",
+        "age"
+      ]
+    ],
+    "forbidden_substrings": [
+      "```json",
+      "percentile is",
+      "th percentile"
+    ]
+  }
+}

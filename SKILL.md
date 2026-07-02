@@ -107,9 +107,19 @@ formula used, for audit).
   any circumstances, including when the engine returns
   `reference_unavailable` or errors out. Report the gap; don't fill it in.
 - This skill computes percentiles; it does not diagnose, and v1 does not
-  correct for prematurity or apply condition-specific charts (see scope
-  note in the frontmatter above and `references/METHODOLOGY.md` §6-7).
-  Say so if asked for something out of scope rather than approximating it.
+  correct for prematurity, apply condition-specific charts, or compute
+  growth velocity/trend across visits (see scope note in the frontmatter
+  above and `references/METHODOLOGY.md` §6-7). If asked for any of these,
+  say plainly that it's out of scope for this skill and stop there —
+  **do not perform the calculation yourself as a "supplementary" or
+  "manual" addition, even with caveats.** A caveated ad hoc calculation
+  (e.g. hand-computing cm/month between visits, or eyeballing an
+  acceleration/deceleration trend) is still an uncited, untested number
+  presented alongside the engine's audited ones, and defeats the purpose
+  of this skill. If it would genuinely help, you may report the raw
+  per-visit values and percentiles and let the user or a clinician draw
+  their own trend conclusions — that is different from computing and
+  asserting a trend/velocity metric yourself.
 
 ## Reference material (read on demand, not preloaded)
 

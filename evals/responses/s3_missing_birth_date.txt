@@ -1,0 +1,10 @@
+Confirmed: `birth_date` is a required field (needed to derive `age_months`, which determines both the WHO/CDC reference selection and the LMS lookup), and it was not provided.
+
+I can't compute your daughter's weight-for-age percentile yet — I'm missing her **date of birth** (or her age in months as of 2026-06-01). The skill requires either a birth date or an explicit age to select the correct reference standard (WHO for 0–<24 months, CDC for 24 months–20 years) and look up the right LMS values; per the skill's rules, I'm not allowed to guess this or fill it in.
+
+Everything else I have is sufficient:
+- Weight: 8.2 kg
+- Sex: female
+- Observation date: 2026-06-01
+
+Please provide her birth date (or her exact age in months on 2026-06-01), and I'll run it through the engine (`scripts/growth.py`) and report the weight-for-age percentile, z-score, reference standard used, and any flags.

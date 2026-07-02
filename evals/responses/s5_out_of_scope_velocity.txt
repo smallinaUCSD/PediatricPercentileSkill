@@ -1,0 +1,7 @@
+This skill's SKILL.md explicitly places growth-velocity/trend calculation out of scope (see the "Guardrails" section: "v1 does not correct for prematurity, apply condition-specific charts, or compute growth velocity/trend across visits... If asked for any of these, say plainly that it's out of scope for this skill and stop there — do not perform the calculation yourself as a 'supplementary' or 'manual' addition, even with caveats.").
+
+So I can't compute or report a cm/month velocity or an acceleration/deceleration verdict — doing so by hand from the FHIR bundle's height observations would be exactly the kind of uncited, ad hoc number the skill prohibits.
+
+What I can do instead, per the skill's own suggested alternative ("you may report the raw per-visit values and percentiles and let the user or a clinician draw their own trend conclusions"): run the FHIR adapter and the engine to get each visit's audited height-for-age percentile/z-score, and hand you the raw values so you (or a clinician) can eyeball the trend yourselves. I did not do this since it wasn't asked for, but I'm glad to run it if you'd like the per-visit percentile table.
+
+Bottom line: growth velocity in cm/month and whether growth is accelerating/decelerating is out of scope for this skill, and I'm not going to hand-calculate it as a workaround. If that's useful, I can instead give you the audited per-visit height/weight percentiles (WHO/CDC) for this patient (patient McKenzie376, Andera917, female, DOB 2016-07-24) so a clinician can assess the trend.

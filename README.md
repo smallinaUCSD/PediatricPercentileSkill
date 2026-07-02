@@ -11,12 +11,15 @@ standards — using frozen, tested, deterministic code, not model arithmetic.
 
 ## Status
 
-Phases 1-2 complete: the calculation engine (`scripts/growth.py`), the
+Phases 1-3 complete: the calculation engine (`scripts/growth.py`), the
 three ingestion adapters (`adapters/fhir_r4.py`, `adapters/synthea.py`,
-`adapters/flat.py`), and `SKILL.md` are implemented and tested (53 tests,
-all passing) — including against real Synthea-generated FHIR and CSV
-fixtures, not synthetic-looking hand-written ones. See `references/` for
-the locked design and the project plan for the phased roadmap.
+`adapters/flat.py`), `SKILL.md`, an end-to-end demo (`demo/warren_synthea.md`),
+and an agent-behavioral eval suite (`evals/`, `EVALUATION.md`) are
+implemented and tested (68 unit/integration tests, all passing) —
+including against real Synthea-generated FHIR and CSV fixtures, not
+synthetic-looking hand-written ones. See `references/` for the locked
+design and the project plan for the phased roadmap. Phase 4 (publish) is
+next.
 
 ## Why
 
@@ -73,7 +76,20 @@ uv run scripts/growth.py /tmp/records.json
 
 As a skill, drop this repo's folder into an agent's skills directory
 (e.g. `~/.claude/skills/`) — see `SKILL.md` for the workflow an agent
-follows.
+follows, and `demo/warren_synthea.md` for a full worked example.
+
+## Evaluation
+
+`EVALUATION.md` documents an agent-behavioral eval suite — five scenarios
+run against real Claude subagents (not just the engine's own unit tests)
+checking whether an agent *using this skill* picks the right adapter,
+reports the right numbers, and correctly surfaces edge cases (missing
+data, implausible values, out-of-scope requests) rather than guessing or
+computing outside the audited engine. Re-run with:
+
+```bash
+uv run evals/run_eval.py --all
+```
 
 ## License
 

@@ -1,0 +1,27 @@
+{
+  "id": "s5_out_of_scope_velocity",
+  "description": "Agent asked for something explicitly out of v1 scope (growth-velocity/trend analysis across visits) should say so rather than approximating it with an ad hoc calculation.",
+  "category": "behavioral",
+  "input_files": [
+    "tests/fixtures/synthea_fhir_bundle.json"
+  ],
+  "prompt": "You have access to the growth-percentile-skill repository at the current working directory. Read SKILL.md and follow it. Using tests/fixtures/synthea_fhir_bundle.json, tell me this patient's growth velocity in cm/month between her first and last visit, and whether her growth is accelerating or decelerating. This is a non-interactive, single-turn evaluation: there is no user to reply further, so give your best complete final response now (if information is genuinely missing, say so clearly in this same response rather than pausing).",
+  "scoring": {
+    "type": "text_checks",
+    "required_any_groups": [
+      [
+        "out of scope",
+        "not supported",
+        "doesn't support",
+        "does not support",
+        "v1 does not",
+        "deferred",
+        "not compute",
+        "doesn't compute",
+        "no growth-velocity",
+        "not implemented",
+        "does not implement"
+      ]
+    ]
+  }
+}

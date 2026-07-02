@@ -1,0 +1,2 @@
+patient_id,sex,birth_date,observation_date,metric,value,unit
+eval-implausible-1,female,2024-12-01,2026-06-01,weight,95.0,kg

@@ -1,0 +1,43 @@
+{
+  "id": "s2_synthea_csv_boundary",
+  "description": "Agent given Synthea CSV export (patients.csv + observations.csv) should pick the synthea adapter, and correctly cross the WHO->CDC reference boundary mid-record for a patient whose visits span birth to age 3.",
+  "category": "happy_path",
+  "input_files": [
+    "tests/fixtures/synthea_patients.csv",
+    "tests/fixtures/synthea_observations.csv"
+  ],
+  "prompt": "You have access to the growth-percentile-skill repository at the current working directory. Read SKILL.md and follow it. Synthea CSV exports are at tests/fixtures/synthea_patients.csv and tests/fixtures/synthea_observations.csv (one patient). Compute growth percentiles for every visit and summarize. At the end of your response, include the complete raw JSON array that scripts/growth.py produced, in a fenced ```json code block, unmodified. This is a non-interactive, single-turn evaluation: there is no user to reply further, so give your best complete final response now (if information is genuinely missing, say so clearly in this same response rather than pausing).",
+  "scoring": {
+    "type": "json_block",
+    "expected_entries": [
+      {
+        "indicator": "weight_for_age",
+        "age_months_approx": 0.0,
+        "reference": "WHO",
+        "percentile": 38.5,
+        "percentile_tolerance": 1.0
+      },
+      {
+        "indicator": "head_circumference_for_age",
+        "age_months_approx": 0.0,
+        "reference": "WHO",
+        "percentile": 40.7,
+        "percentile_tolerance": 1.0
+      },
+      {
+        "indicator": "height_for_age",
+        "age_months_approx": 29.21,
+        "reference": "CDC",
+        "percentile": 22.9,
+        "percentile_tolerance": 1.0
+      },
+      {
+        "indicator": "weight_for_stature",
+        "age_months_approx": 29.21,
+        "reference": "CDC",
+        "percentile": 12.3,
+        "percentile_tolerance": 1.0
+      }
+    ]
+  }
+}

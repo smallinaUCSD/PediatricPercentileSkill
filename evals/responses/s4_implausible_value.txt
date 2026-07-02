@@ -1,0 +1,5 @@
+For this patient (female, ~18.0 months old at the observation date), weight-for-age against the **WHO** growth standard computes to a z-score of ~13.70 and a percentile of 100.0 (WHO standard).
+
+However, this result is flagged **`implausible_value`**: the engine's modified-z-score check identifies the input (95.0 kg for an 18-month-old) as a likely data-entry error — e.g., a misplaced decimal point (9.5 kg would be a plausible weight for this age) or a unit mix-up. A weight of 95 kg is far outside the physiologically plausible range for an 18-month-old, and a "100th percentile" here should not be interpreted as a normal (if extreme) growth finding.
+
+**Bottom line:** I'm not reporting this as a valid 100th-percentile result. The raw value looks like a data-entry error and should be double-checked (units and decimal placement) before this measurement is used clinically. If the intended value was 9.5 kg, that would need to be re-entered and recomputed — I have not substituted or guessed a corrected value myself, per the skill's guardrails against inventing or adjusting engine input/output.

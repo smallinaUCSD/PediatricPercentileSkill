@@ -35,3 +35,18 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   (22 tests).
 - `SKILL.md` — the agent-facing workflow: input detection, adapter
   selection, calling the engine, and how to interpret/present each flag.
+- `demo/warren_synthea.md` — end-to-end walkthrough (raw FHIR bundle ->
+  adapter -> engine -> presented summary) on a real Synthea patient whose
+  record crosses the WHO->CDC boundary and the length/stature switch.
+- `evals/` — agent-behavioral eval harness: `scorer.py` (deterministic,
+  unit-tested in `tests/test_scorer.py`, 15 tests), `run_eval.py` CLI,
+  five scenarios (`evals/scenarios/`) covering happy-path FHIR/Synthea
+  ingestion and behavioral edge cases (missing required field,
+  implausible-value flagging, out-of-scope request), and committed real
+  captured responses (`evals/responses/`).
+- `EVALUATION.md` — results of running the eval suite against real
+  subagents: 4/5 passed on the first run; the failure (an agent
+  hand-computing out-of-scope growth-velocity math despite a caveat)
+  led to a `SKILL.md` guardrail fix, re-verified to pass. Both the
+  original failing response and the fixed passing response are committed
+  for auditability.

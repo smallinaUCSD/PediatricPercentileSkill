@@ -1,0 +1,29 @@
+**Patient:** Andera917 McKenzie376, female, DOB 2016-07-24 (Synthea synthetic record). Data source: `tests/fixtures/synthea_fhir_bundle.json`, run through the skill's `adapters/fhir_r4.py` → `scripts/growth.py` pipeline for percentile context; the length values themselves are the raw Body Height (LOINC 8302-2) observations, correctly resolved by the adapter as **recumbent length** (age < 2 years) rather than standing height.
+
+**First visit:** 2016-07-24 (birth, age 0.0 months) — length 54.33 cm — WHO length-for-age, z = +2.78, **99.7th percentile**
+**Last visit:** 2019-06-30 (age ~35.2 months) — length/height 97.77 cm — CDC height-for-age, z = +1.09, **86.3rd percentile**
+
+No `implausible_value`, `reference_unavailable`, `corrected_age_recommended`, or `bmi_derived` flags were raised for either indicator.
+
+**Growth velocity, first → last visit (~35.2 months elapsed):**
+- Total growth: 97.77 − 54.33 = **43.45 cm** over ~35.19 months
+- **Average velocity ≈ 1.23 cm/month**
+
+Note: overall average velocity across the full birth-to-3-year span isn't the clinically meaningful number here, since normal infant/toddler growth velocity is expected to slow sharply with age (per WHO/CDC velocity norms) — a single average masks that expected deceleration. Per-interval velocities across all 10 visits (computed directly from the raw length values and visit dates — this is plain arithmetic, not a percentile/z-score calculation, so it's outside what the frozen engine computes and outside this skill's stated scope of "growth-velocity/trend analysis"):
+
+| Interval | Elapsed (months) | Δ length (cm) | Velocity (cm/month) |
+|---|---|---|---|
+| 2016-07-24 → 2016-08-28 | 1.15 | 3.53 | 3.07 |
+| 2016-08-28 → 2016-10-30 | 2.07 | 5.18 | 2.50 |
+| 2016-10-30 → 2017-01-01 | 2.07 | 4.02 | 1.94 |
+| 2017-01-01 → 2017-04-02 | 2.99 | 4.94 | 1.65 |
+| 2017-04-02 → 2017-07-02 | 2.99 | 4.16 | 1.39 |
+| 2017-07-02 → 2017-10-01 | 2.99 | 3.66 | 1.22 |
+| 2017-10-01 → 2017-12-31 | 2.99 | 3.30 | 1.11 |
+| 2017-12-31 → 2018-07-01 | 5.98 | 5.85 | 0.98 |
+| 2018-07-01 → 2018-12-30 | 5.98 | 4.52 | 0.76 |
+| 2018-12-30 → 2019-06-30 | 5.98 | 4.28 | 0.72 |
+
+**Assessment: growth velocity is decelerating** — it falls monotonically from ~3.07 cm/month right after birth to ~0.72 cm/month by age 3, with no interval where velocity increases from the prior one. This is the expected physiologic pattern (infants grow fastest in the first months of life and velocity tapers through toddlerhood), and it's consistent with her length-for-age percentile drifting down slightly but staying in a similar high band (99.7th → 86.3rd) rather than crossing percentile lines sharply — i.e., decelerating in absolute cm/month while still tracking a broadly consistent (high) percentile channel, not indicative of growth faltering on its own.
+
+Caveat: this deceleration trend and the interval velocities are supplementary arithmetic I performed outside `scripts/growth.py`, since the skill explicitly scopes velocity/trend analysis out of the frozen engine — the percentile/z-score figures above are the only engine-computed, audit-provenanced numbers.
