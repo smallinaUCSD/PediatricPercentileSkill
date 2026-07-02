@@ -1,0 +1,198 @@
+{
+  "_banner": "DO NOT MODIFY - frozen reference vectors. See CONTRIBUTING.md. Any change requires CODEOWNER review and a cited source.",
+  "_description": "End-to-end engine vectors (through compute_for_age / compute_weight_for_length_or_stature), exercising real CDC/WHO data files in references/data/. Expected values were computed with this engine against the cited authoritative source/row and, where noted, cross-checked against an independent published number.",
+  "vectors": [
+    {
+      "id": "seed_cdc_infant_weight_9_5mo",
+      "citation": "CDC infant weight-for-age (cdc_wtageinf.csv), exact tabulated row Sex=1 Agemos=9.5: L=-0.1600954, M=9.476500305, S=0.11218624. Cross-checked against project plan's seed anchor (male, ~9mo, weight 9.7kg -> z~0.21, ~58th percentile).",
+      "record": {"patient_id": "seed1", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "weight", "value": 9.7, "unit": "kg", "age_months": 9.5},
+      "reference_override": "CDC",
+      "expect": {
+        "reference": "CDC", "indicator": "weight_for_age",
+        "z_score": 0.20739870385756286, "z_tolerance": 1e-6,
+        "percentile": 58.21506923432038, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "seed_cdc_2to20_weight_24mo_boundary",
+      "citation": "CDC 2-20yr weight-for-age (cdc_wtage.csv), exact tabulated row Sex=1 Agemos=24: L=-0.20615245, M=12.6707633, S=0.108125811. Matches project plan's seed anchor (male, 24mo, weight 14.5kg -> z=1.23, 89th percentile) exactly. Also verifies the WHO/CDC handoff picks CDC (not WHO) at exactly 24.0 months.",
+      "record": {"patient_id": "seed2", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "weight", "value": 14.5, "unit": "kg", "age_months": 24.0},
+      "expect": {
+        "reference": "CDC", "indicator": "weight_for_age",
+        "z_score": 1.2299949557860118, "z_tolerance": 1e-6,
+        "percentile": 89.06510876750017, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "boundary_who_just_under_24mo",
+      "citation": "Verifies the WHO/CDC handoff picks WHO (not CDC) at 23.9 months (references/METHODOLOGY.md section 2). Value from who_weight_for_age.csv (Sex=1) via day-resolution interpolation.",
+      "record": {"patient_id": "b1", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "weight", "value": 9.0, "unit": "kg", "age_months": 23.9},
+      "expect": {
+        "reference": "WHO", "indicator": "weight_for_age",
+        "z_score": -2.6195841885311997, "z_tolerance": 1e-6,
+        "percentile": 0.44018519629600505, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "who_length_for_age_12mo",
+      "citation": "WHO length-for-age (who_length_for_age.csv), Sex=2, age 12mo (365.25 days), day-resolution interpolation.",
+      "record": {"patient_id": "b2", "sex": "female", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "length_recumbent", "value": 74.5, "unit": "cm", "age_months": 12},
+      "expect": {
+        "reference": "WHO", "indicator": "length_for_age",
+        "z_score": 0.18837038702633332, "z_tolerance": 1e-6,
+        "percentile": 57.47068440664356, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "cdc_height_for_age_10yr",
+      "citation": "CDC stature-for-age (cdc_statage.csv), Sex=1, age 120mo (10yr, exact tabulated row).",
+      "record": {"patient_id": "b3", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "height_standing", "value": 140.0, "unit": "cm", "age_months": 120},
+      "expect": {
+        "reference": "CDC", "indicator": "height_for_age",
+        "z_score": 0.20902240377608272, "z_tolerance": 1e-6,
+        "percentile": 58.27846253946542, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "guard_no_who_standing_height_under_24mo",
+      "citation": "references/METHODOLOGY.md section 3 (length vs. stature): WHO has no standing-height table (0-<24mo always uses recumbent length), so a height_standing measurement under 24 months must NOT silently fall back to a CDC table -- it must report reference_unavailable.",
+      "record": {"patient_id": "b4", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "height_standing", "value": 80.0, "unit": "cm", "age_months": 10},
+      "expect": {
+        "reference": "WHO", "indicator": "height_for_age",
+        "z_score": null, "z_tolerance": 0,
+        "percentile": null, "percentile_tolerance": 0,
+        "flags": ["reference_unavailable"]
+      }
+    },
+    {
+      "id": "cdc_head_circumference_30mo",
+      "citation": "CDC head-circumference-for-age (cdc_hcageinf.csv), Sex=2, age 30mo -- within CDC's published 0-36mo range, so the default CDC selection (age>=24mo) correctly uses this infant-scoped file since it's the only CDC HC table (see references/DATA_SOURCES.md).",
+      "record": {"patient_id": "b5", "sex": "female", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "head_circumference", "value": 48.0, "unit": "cm", "age_months": 30},
+      "expect": {
+        "reference": "CDC", "indicator": "head_circumference_for_age",
+        "z_score": -0.09644197602230306, "z_tolerance": 1e-6,
+        "percentile": 46.15847777156568, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "guard_head_circumference_beyond_36mo",
+      "citation": "CDC does not publish a head-circumference-for-age chart beyond 36 months (references/DATA_SOURCES.md); v1 does not extend WHO past 24 months to cover this gap, so 48mo must report reference_unavailable rather than a silently wrong value.",
+      "record": {"patient_id": "b6", "sex": "female", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "head_circumference", "value": 50.0, "unit": "cm", "age_months": 48},
+      "expect": {
+        "reference": "CDC", "indicator": "head_circumference_for_age",
+        "z_score": null, "z_tolerance": 0,
+        "percentile": null, "percentile_tolerance": 0,
+        "flags": ["reference_unavailable"]
+      }
+    },
+    {
+      "id": "extended_bmi_reproduces_table_z2",
+      "citation": "CDC extended BMI-for-age data file (cdc_bmi_extended.csv), Sex=1 Agemos=24 row: P95=19.338, sigma=1.3756, and its own published Z2 column = 20.3657 (the BMI value AT z=2 per CDC's own table). Feeding that exact BMI value back into our extended-BMI formula must reproduce z=2.0 -- this is the verification described in references/METHODOLOGY.md section 4.",
+      "record": {"patient_id": "b7", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "bmi", "value": 20.3657, "unit": "kg/m2", "age_months": 24},
+      "expect": {
+        "reference": "CDC", "indicator": "bmi_for_age",
+        "z_score": 1.99999510798601, "z_tolerance": 1e-3,
+        "percentile": 97.72496039259651, "percentile_tolerance": 1e-2,
+        "flags": ["extended_bmi_used"]
+      }
+    },
+    {
+      "id": "extended_bmi_reproduces_table_z3",
+      "citation": "Same source/row, published Z3 column = 22.3802.",
+      "record": {"patient_id": "b8", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "bmi", "value": 22.3802, "unit": "kg/m2", "age_months": 24},
+      "expect": {
+        "reference": "CDC", "indicator": "bmi_for_age",
+        "z_score": 2.9999974715309996, "z_tolerance": 1e-3,
+        "percentile": 99.86500907625361, "percentile_tolerance": 1e-2,
+        "flags": ["extended_bmi_used"]
+      }
+    },
+    {
+      "id": "plausible_high_bmi_not_flagged",
+      "citation": "CDC Modified-Z-scores report's own primary example (200-month girl, BMI 33 kg/m2) run through the real (interpolated, unrounded) table data rather than the report's rounded illustrative L/M/S. A real obese-but-plausible BMI must NOT trip the implausible_value BIV flag (cutoff is modified z > 8).",
+      "record": {"patient_id": "b9", "sex": "female", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "bmi", "value": 33.0, "unit": "kg/m2", "age_months": 200},
+      "expect": {
+        "reference": "CDC", "indicator": "bmi_for_age",
+        "z_score": 1.889291313414959, "z_tolerance": 1e-6,
+        "percentile": 97.05735975665904, "percentile_tolerance": 1e-4,
+        "flags": ["extended_bmi_used"]
+      }
+    },
+    {
+      "id": "implausible_low_bmi_flagged",
+      "citation": "Same age/sex, BMI 12 kg/m2 (same scenario as the CDC report's low-BMI modified-z example, but through real table data). Expected to trip the implausible_value BIV flag (cutoff is modified z < -4).",
+      "record": {"patient_id": "b10", "sex": "female", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "bmi", "value": 12.0, "unit": "kg/m2", "age_months": 200},
+      "expect": {
+        "reference": "CDC", "indicator": "bmi_for_age",
+        "z_score": -7.112379872554435, "z_tolerance": 1e-6,
+        "percentile": 5.7029400795970576e-11, "percentile_tolerance": 1e-9,
+        "flags": ["implausible_value"]
+      }
+    },
+    {
+      "id": "who_bmi_for_age_infant",
+      "citation": "WHO BMI-for-age (who_bmi_for_age.csv), Sex=2, age 10mo -- confirms the ordinary (non-extended) LMS path is used for WHO, since extended BMI parameters only exist in the CDC 2022 file.",
+      "record": {"patient_id": "b11", "sex": "female", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "bmi", "value": 16.5, "unit": "kg/m2", "age_months": 10},
+      "expect": {
+        "reference": "WHO", "indicator": "bmi_for_age",
+        "z_score": -0.08076997088783872, "z_tolerance": 1e-6,
+        "percentile": 46.781244489016885, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "prematurity_flag_present_under_24mo",
+      "citation": "references/METHODOLOGY.md section 6: gestational_age_weeks < 37 with uncorrected age < 24mo must add corrected_age_recommended, computed against uncorrected chronological age (not silently corrected).",
+      "record": {"patient_id": "b12", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "weight", "value": 8.0, "unit": "kg", "age_months": 10, "gestational_age_weeks": 30},
+      "expect": {
+        "reference": "WHO", "indicator": "weight_for_age",
+        "z_score": -1.241335019589263, "z_tolerance": 1e-6,
+        "percentile": 10.72410065001459, "percentile_tolerance": 1e-4,
+        "flags": ["corrected_age_recommended"]
+      }
+    },
+    {
+      "id": "prematurity_flag_absent_at_24mo_plus",
+      "citation": "Same as above but age 30mo -- the flag only applies while age < 24 months (references/METHODOLOGY.md section 6), so it must be absent here even with the same gestational age.",
+      "record": {"patient_id": "b13", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "weight", "value": 13.0, "unit": "kg", "age_months": 30, "gestational_age_weeks": 30},
+      "expect": {
+        "reference": "CDC", "indicator": "weight_for_age",
+        "z_score": -0.3432078726757026, "z_tolerance": 1e-6,
+        "percentile": 36.572104122671725, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    }
+  ],
+  "paired_vectors": [
+    {
+      "id": "who_weight_for_length_10mo",
+      "citation": "WHO weight-for-length (who_weight_for_length.csv), Sex=1, length 74cm.",
+      "weight_record": {"patient_id": "p1", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "weight", "value": 9.0, "unit": "kg", "age_months": 10},
+      "length_or_height_record": {"patient_id": "p1", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "length_recumbent", "value": 74.0, "unit": "cm", "age_months": 10},
+      "expect": {
+        "reference": "WHO", "indicator": "weight_for_length",
+        "z_score": -0.39474822601534065, "z_tolerance": 1e-6,
+        "percentile": 34.651435391179156, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
+      "id": "cdc_weight_for_stature_5yr",
+      "citation": "CDC weight-for-stature (cdc_wtstat.csv), Sex=1, height 110cm.",
+      "weight_record": {"patient_id": "p2", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "weight", "value": 18.0, "unit": "kg", "age_months": 60},
+      "length_or_height_record": {"patient_id": "p2", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "height_standing", "value": 110.0, "unit": "cm", "age_months": 60},
+      "expect": {
+        "reference": "CDC", "indicator": "weight_for_stature",
+        "z_score": -0.4381691863376373, "z_tolerance": 1e-6,
+        "percentile": 33.06318218951284, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    }
+  ]
+}

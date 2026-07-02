@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "growth-percentile-skill"
+authors:
+  - name: "Seshu Mallina"
+license: MIT
+repository-code: "https://github.com/smallinaUCSD/PediatricPercentileSkill"
+date-released: "2026-07-01"
+version: "0.1.0"

@@ -1,0 +1,42 @@
+{
+  "_banner": "DO NOT MODIFY - frozen reference vectors. See CONTRIBUTING.md. Any change requires CODEOWNER review and a cited source.",
+  "_description": "Pure LMS / modified-z formula checks against CDC's own published worked examples, using CDC's exact (rounded-for-publication) L, M, S rather than a value read from a data file. These validate the math in scripts/growth.py independently of table loading/interpolation.",
+  "vectors": [
+    {
+      "id": "cdc_ordinary_bmiz_compression_33",
+      "citation": "CDC, 'Modified z-scores in the CDC growth charts', https://www.cdc.gov/growth-chart-training/media/pdfs/Modified-Z-scores-508.pdf, p.2. 200-month-old girl, BMI 33 kg/m2, L=-2.18, M=20.76, S=0.148.",
+      "function": "lms_z",
+      "args": {"x": 33.0, "L": -2.18, "M": 20.76, "S": 0.148},
+      "expect": 1.9709934698901093,
+      "tolerance": 1e-6,
+      "note": "CDC's report states this rounds to 1.97 (97.6th percentile)."
+    },
+    {
+      "id": "cdc_ordinary_bmiz_compression_333",
+      "citation": "Same source, p.2-3. Same girl, BMI mis-entered as 333 kg/m2 (a plausible fat-fingered '33.3').",
+      "function": "lms_z",
+      "args": {"x": 333.0, "L": -2.18, "M": 20.76, "S": 0.148},
+      "expect": 3.092119846216447,
+      "tolerance": 1e-6,
+      "note": "CDC's report states this rounds to 3.1 -- illustrating that a 300 kg/m2 data-entry error only moves the ordinary z-score by ~1.1 SD, which is why the modified z-score exists (see modified_z vectors below)."
+    },
+    {
+      "id": "cdc_modified_z_333_high",
+      "citation": "Same source, p.3. Same 333 kg/m2 example, using the modified-z formula (Equation in 'Calculation of modified z-scores').",
+      "function": "modified_z",
+      "args": {"x": 333.0, "L": -2.18, "M": 20.76, "S": 0.148},
+      "expect": 49.41849006173469,
+      "tolerance": 1e-6,
+      "note": "CDC's report hand-computes this as 49.2 using SD_distance rounded to 6.32 kg/m2; our unrounded implementation of the same formula (SD_distance = 6.3182...) gives 49.42. The two are consistent given the report's stated rounding -- both correctly flag this as extreme (BIV cutoff for BMI-for-age is modified z > 8)."
+    },
+    {
+      "id": "cdc_modified_z_12_low",
+      "citation": "Same source, p.3-4. Same sex/age, BMI 12 kg/m2 (below the median).",
+      "function": "modified_z",
+      "args": {"x": 12.0, "L": -2.18, "M": 20.76, "S": 0.148},
+      "expect": -4.132992413850737,
+      "tolerance": 1e-6,
+      "note": "CDC's report states this rounds to -4.1, matching our unrounded value to 2 decimal places."
+    }
+  ]
+}

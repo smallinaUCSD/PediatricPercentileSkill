@@ -1,0 +1,4 @@
+# Frozen reference data requires human review -- see CONTRIBUTING.md.
+# A change here should come with a cited source, not just a passing test.
+/tests/golden/ @smallinaUCSD
+/references/data/ @smallinaUCSD
