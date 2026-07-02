@@ -1,0 +1,5 @@
+patient_id,sex,birth_date,observation_date,metric,value,unit
+flat-1,male,2024-01-15,2024-01-15,weight,3.4,kg
+flat-1,male,2024-01-15,2024-01-15,length_recumbent,50.5,cm
+flat-1,male,2024-01-15,2025-01-15,weight,10.2,kg
+flat-1,male,2024-01-15,2025-01-15,length_recumbent,76.0,cm

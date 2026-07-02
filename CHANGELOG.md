@@ -24,3 +24,14 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   formula) plus a checksum manifest; `tests/test_engine.py` (31 tests).
 - `.github/CODEOWNERS` and `.github/workflows/ci.yml` — golden-fixture
   checksum gate + test suite in CI.
+- `adapters/fhir_r4.py`, `adapters/synthea.py` (Synthea CSV export),
+  `adapters/flat.py` (CSV/JSON escape hatch), and shared helpers in
+  `adapters/_common.py` — including the age-based heuristic for
+  resolving LOINC `8302-2` ("Body height") to `length_recumbent` vs.
+  `height_standing`, needed because real-world exports (Synthea
+  included) don't reliably use the recumbent-length-specific code.
+- `tests/fixtures/` — real Synthea-generated FHIR R4 and CSV patient data
+  (not hand-written) used to test the adapters; `tests/test_adapters.py`
+  (22 tests).
+- `SKILL.md` — the agent-facing workflow: input detection, adapter
+  selection, calling the engine, and how to interpret/present each flag.

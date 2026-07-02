@@ -39,6 +39,11 @@ uv run pytest
 
 ## Adding an adapter
 
-New ingestion sources should map into `MeasurementRecord`
-(`references/CANONICAL_SCHEMA.md`) and live under `adapters/`. They should
-not depend on or modify `scripts/growth.py`.
+New ingestion sources should map into the canonical `MeasurementRecord`
+shape (`references/CANONICAL_SCHEMA.md`) and live under `adapters/`. They
+output plain JSON-serializable dicts matching that schema (not a Python
+object imported from the engine) and must not import or depend on
+`scripts/growth.py`'s calculation internals — this keeps ingestion and
+calculation chainable purely through JSON, the same way an agent invokes
+them (adapter CLI output piped into `growth.py`'s CLI input), and keeps
+the engine's test surface (`tests/golden/`) independent of adapter code.

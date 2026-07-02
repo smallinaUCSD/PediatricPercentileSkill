@@ -1,0 +1,20 @@
+[
+  {
+    "patient_id": "flat-1",
+    "sex": "male",
+    "birth_date": "2024-01-15",
+    "observation_date": "2024-01-15",
+    "metric": "weight",
+    "value": 3.4,
+    "unit": "kg"
+  },
+  {
+    "patient_id": "flat-1",
+    "sex": "male",
+    "birth_date": "2024-01-15",
+    "observation_date": "2024-01-15",
+    "metric": "length_recumbent",
+    "value": 50.5,
+    "unit": "cm"
+  }
+]

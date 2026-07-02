@@ -11,11 +11,12 @@ standards — using frozen, tested, deterministic code, not model arithmetic.
 
 ## Status
 
-Phase 1 complete: the calculation engine (`scripts/growth.py`) is
-implemented and tested against real CDC/WHO data with a frozen golden
-suite (31 tests, all passing). Adapters (FHIR R4, Synthea, flat) and
-`SKILL.md` are not implemented yet — see `references/` for the locked
-design and the project plan for the phased roadmap.
+Phases 1-2 complete: the calculation engine (`scripts/growth.py`), the
+three ingestion adapters (`adapters/fhir_r4.py`, `adapters/synthea.py`,
+`adapters/flat.py`), and `SKILL.md` are implemented and tested (53 tests,
+all passing) — including against real Synthea-generated FHIR and CSV
+fixtures, not synthetic-looking hand-written ones. See `references/` for
+the locked design and the project plan for the phased roadmap.
 
 ## Why
 
@@ -52,10 +53,27 @@ uv run pytest    # run the test suite
 
 ## Trying it out
 
+Directly, with a hand-written record:
+
 ```bash
 echo '[{"patient_id":"demo","sex":"male","birth_date":"2020-01-01","observation_date":"2020-10-15","metric":"weight","value":9.7,"unit":"kg"}]' > /tmp/records.json
 uv run scripts/growth.py /tmp/records.json
 ```
+
+Through an adapter, with a real Synthea-generated patient (see
+`tests/fixtures/README.md` for provenance):
+
+```bash
+uv run adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > /tmp/records.json
+uv run scripts/growth.py /tmp/records.json
+
+uv run adapters/synthea.py tests/fixtures/synthea_patients.csv tests/fixtures/synthea_observations.csv > /tmp/records.json
+uv run scripts/growth.py /tmp/records.json
+```
+
+As a skill, drop this repo's folder into an agent's skills directory
+(e.g. `~/.claude/skills/`) — see `SKILL.md` for the workflow an agent
+follows.
 
 ## License
 
