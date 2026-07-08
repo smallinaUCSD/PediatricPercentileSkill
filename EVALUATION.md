@@ -19,7 +19,11 @@ scenario is either:
   `scripts/growth.py` to its answer; `evals/scorer.py` extracts it and
   checks specific entries (indicator, reference standard, percentile
   within tolerance, required flags) against expected values computed
-  independently from the same input files.
+  independently from the same input files. `json_block` scenarios can
+  additionally set `check_prose_consistency: true` — this cross-checks
+  any "Xth percentile" claim in the agent's own prose against its own
+  appended JSON, catching an agent that states a different number to the
+  human reader than the one it actually computed (see below).
 - **`text_checks`**: behavioral scenarios (missing data, implausible
   values, out-of-scope requests) scored by required/forbidden phrases in
   the agent's final answer — see `evals/scorer.py` for exact logic.
@@ -55,6 +59,24 @@ reported WHO for the birth visit and CDC for the 29-month visit (crossing
 the reference boundary mid-patient), surfaced the `bmi_derived` flag, and
 appended the complete, correct 44-entry JSON array. All four spot-checked
 entries matched expected reference/percentile within tolerance.
+
+**A stricter check found a bug in this eval fixture itself, not in the
+agent.** After adding `check_prose_consistency` (see Method above) and
+enabling it here, the check failed: the agent's prose said "27th–60th
+percentile" and "1st–37th percentile" for two range summaries, and
+neither number matched anything in the committed `evals/responses/s1_...txt`
+JSON block. Investigating turned up the actual problem — when this
+response was originally captured, the JSON block had been manually
+excerpted down to 8 of the real 44 entries (for file-size/readability
+reasons at the time), which silently broke internal consistency between
+the prose (written against the *full* result set) and what was committed
+as the "captured response." The real agent output was never wrong; the
+saved fixture was incomplete. Fixed by regenerating the deterministic
+44-entry array from the same input file and restoring it in full — the
+check now passes, confirming both that the original response was
+self-consistent and that the check works. Lesson: a captured eval
+response must be the complete, verbatim output, not a curated excerpt,
+or checks like this one will flag the curation instead of the agent.
 
 ### s2 — Synthea CSV export, WHO/CDC boundary mid-record
 
@@ -142,6 +164,13 @@ independently checkable, not just asserted.
    correctness — see the s2 note above. Fixed for future runs by using
    scenario-scoped temp paths (not yet automated; a manual reminder here
    until the harness enforces it).
+4. **A "does the JSON block validate" check isn't the same as "does the
+   agent's prose agree with its own JSON."** `check_prose_consistency`
+   closes that gap — and its first real run caught a fidelity bug in how
+   *we* stored a captured response, not in the agent. That's still a win
+   for the check: an eval fixture that silently drifts from the real
+   response it claims to represent is exactly the kind of thing that
+   should fail loudly rather than pass by accident.
 
 ## Re-running this eval suite
 

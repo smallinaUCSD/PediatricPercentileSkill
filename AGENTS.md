@@ -22,8 +22,13 @@ this and got caught.
 uv sync                       # install deps
 uv run pytest                 # full test suite (must pass before any PR)
 uv run evals/run_eval.py --all   # agent-behavioral eval suite
-claude plugin validate .      # validate .claude-plugin/ manifests
 ```
+
+If you're working via Claude Code specifically (this repo also ships as a
+Claude Code plugin, see `.claude-plugin/`): `claude plugin validate .`
+validates the plugin/marketplace manifests. There's no cross-agent
+equivalent for this one step since those manifests are a Claude Code
+distribution mechanism, not something every agent needs to touch.
 
 No lint/format tooling is configured yet — don't invent one unilaterally.
 

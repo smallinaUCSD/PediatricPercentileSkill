@@ -102,3 +102,76 @@ def test_score_scenario_dispatches_json_block():
 def test_score_scenario_dispatches_text_checks():
     scenario = {"scoring": {"type": "text_checks", "required_substrings": ["hello"], "forbidden_substrings": []}}
     assert scorer.score_scenario(scenario, "hello world").passed
+
+
+# --------------------------------------------------------------------------
+# Prose/JSON consistency (stricter check: does the agent's stated number
+# agree with the number in the JSON it appended, not just "is the JSON
+# correct against ground truth")
+# --------------------------------------------------------------------------
+
+
+def test_extract_prose_percentile_mentions_finds_ordinal_phrasing():
+    text = "Her weight is at the 58th percentile and length at the 99.7th percentile."
+    assert scorer.extract_prose_percentile_mentions(text) == [58.0, 99.7]
+
+
+def test_extract_prose_percentile_mentions_ignores_json_code_blocks():
+    text = 'Result: 58th percentile.\n```json\n[{"percentile": 12.3}]\n```'
+    # "12.3" inside the JSON block isn't followed by the word "percentile", but
+    # this also confirms fenced content is stripped before the prose regex runs.
+    assert scorer.extract_prose_percentile_mentions(text) == [58.0]
+
+
+def test_score_prose_matches_json_passes_when_prose_agrees_with_json():
+    text = (
+        "Her weight-for-age comes out to the 58th percentile.\n"
+        '```json\n[{"indicator": "weight_for_age", "percentile": 58.21, "reference": "WHO"}]\n```'
+    )
+    result = scorer.score_prose_matches_json(text)
+    assert result.passed
+
+
+def test_score_prose_matches_json_fails_when_prose_states_a_different_number():
+    text = (
+        "Her weight-for-age comes out to the 75th percentile.\n"
+        '```json\n[{"indicator": "weight_for_age", "percentile": 58.21, "reference": "WHO"}]\n```'
+    )
+    result = scorer.score_prose_matches_json(text)
+    assert not result.passed
+    assert any("PROSE/JSON MISMATCH" in d for d in result.details)
+
+
+def test_score_prose_matches_json_respects_tolerance():
+    text = (
+        "Approximately the 59th percentile.\n"
+        '```json\n[{"indicator": "weight_for_age", "percentile": 58.21, "reference": "WHO"}]\n```'
+    )
+    assert scorer.score_prose_matches_json(text, tolerance=1.5).passed
+    assert not scorer.score_prose_matches_json(text, tolerance=0.1).passed
+
+
+def test_score_prose_matches_json_ignores_none_percentiles_in_json():
+    text = (
+        "This measurement's reference table doesn't cover this age.\n"
+        '```json\n[{"indicator": "weight_for_age", "percentile": null, "reference": "CDC"}]\n```'
+    )
+    result = scorer.score_prose_matches_json(text)
+    assert result.passed  # no percentile mentioned in prose, nothing to contradict
+
+
+def test_score_scenario_json_block_runs_prose_consistency_when_requested():
+    scenario = {
+        "scoring": {
+            "type": "json_block",
+            "expected_entries": [{"indicator": "weight_for_age", "age_months_approx": 1.0, "reference": "WHO"}],
+            "check_prose_consistency": True,
+        }
+    }
+    text = (
+        "This is at the 99th percentile.\n"
+        '```json\n[{"indicator": "weight_for_age", "age_months": 1.0, "reference": "WHO", "percentile": 50.0, "flags": []}]\n```'
+    )
+    result = scorer.score_scenario(scenario, text)
+    assert not result.passed
+    assert any("PROSE/JSON MISMATCH" in d for d in result.details)

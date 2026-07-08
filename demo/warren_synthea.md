@@ -120,6 +120,23 @@ guidance on presenting flags rather than burying them:
 > readings rather than measured directly (`bmi_derived` flag) since the
 > source data didn't include a BMI observation until the 2018-12-30 visit.
 
+## Step 4 — visualize (optional)
+
+```bash
+uv run scripts/chart.py results.json --out-dir charts/
+```
+
+This produces one self-contained HTML file for the patient — percentile
+curves plus her own trajectory, for every age-based indicator she has
+data for (she has no head-circumference observations in this bundle, so
+that panel is correctly omitted rather than shown empty):
+
+![Growth chart for this patient: weight-for-age, length/height-for-age, and BMI-for-age percentile curves with her trajectory plotted in red](warren_chart_example.png)
+
+Open the file in any browser — no server, no internet connection needed
+— and hover a red point for the exact date, value, percentile, reference
+standard, and any flags at that visit.
+
 ## What this demonstrates
 
 - **Deterministic engine, real data.** Every percentile above traces back
@@ -136,6 +153,20 @@ guidance on presenting flags rather than burying them:
 - **A noisy, realistic input** — 81 Observations of which only 24 are
   growth-relevant — handled correctly by LOINC filtering, not a
   pre-cleaned list.
+- **A visual, not just a table**, generated from the same audited numbers
+  — not a separate hand-drawn chart that could drift from the engine's
+  output.
+
+## Other ways to bring data in
+
+This demo uses the FHIR adapter because that's what the source file is,
+but the same three steps (ingest → compute → visualize) work with
+Synthea's CSV export (`adapters/synthea.py`) or your own spreadsheet
+(`adapters/flat.py`) — including one with arbitrary column names via
+`adapters/flat.py --map colmap.json`, if your columns aren't already
+named `patient_id`, `birth_date`, etc. See the main
+[README](../README.md#bring-your-own-data) for the exact shapes each
+adapter expects.
 
 ## Reproduce it yourself
 
@@ -145,4 +176,6 @@ uv sync
 uv run adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > /tmp/records.json
 uv run scripts/growth.py /tmp/records.json > /tmp/results.json
 cat /tmp/results.json
+uv run scripts/chart.py /tmp/results.json --out-dir /tmp/charts
+open /tmp/charts/chart_*.html  # macOS; use xdg-open on Linux
 ```

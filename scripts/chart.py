@@ -9,9 +9,14 @@ hand-written inline <script> for hover tooltips -- no charting library,
 no CDN, no new Python dependency. Opens in any browser, fully offline,
 same as the engine itself.
 
-Curves reuse the engine's own reference tables (growth.py's REGISTRY /
-_load_table) rather than re-deriving anything, so a curve and a
-patient's own percentile always come from the same source row.
+Curves reuse the engine's own reference-table selection (growth.py's
+_select_table / _load_table) rather than re-deriving anything, and which
+(indicator, reference standard) pairs get a curve is derived from what
+actually appears in the patient's own results -- not hardcoded, since the
+engine's own default selection can pick either standard for the same
+indicator depending on age (e.g. a recumbent-length measurement at 24-36
+months is a real, unremarkable case that resolves to CDC by default, not
+just via explicit override).
 
 Known limitations (also noted in README.md):
 - weight-for-length and weight-for-stature are not charted -- they need
@@ -23,6 +28,9 @@ Known limitations (also noted in README.md):
   the standard 3rd-97th lines. The CDC 2022 extended method only changes
   how an individual point above the 95th percentile is scored, not how
   the reference curves themselves are drawn.
+- A result flagged reference_unavailable (percentile/z_score are None)
+  is still plotted by its raw value, but its tooltip says so instead of
+  showing a percentile.
 - This is an orientation aid, not a clinical-grade chart image -- it has
   no independent test suite verifying rendered pixel positions, unlike
   the engine's numeric output (tests/golden/).
@@ -34,6 +42,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import sys
 from pathlib import Path
@@ -44,20 +53,22 @@ import growth  # noqa: E402
 PERCENTILE_LINES = [3, 5, 10, 25, 50, 75, 90, 95, 97]
 _Z_BY_PERCENTILE = {p: growth.norm.ppf(p / 100) for p in PERCENTILE_LINES}
 
-# panel_key -> (title, y-axis unit, [(indicator, standard) pairs to draw a curve for])
-# Explicit pairs, not a cross product of every indicator x every standard --
-# e.g. length_for_age only ever gets a WHO curve here (CDC's length_for_age
-# table exists only for explicit-override use, per SKILL.md, not as part of
-# the natural WHO->CDC handoff this chart visualizes).
+# panel_key -> (title, y-axis unit, [indicator names that feed this panel])
 PANELS = {
-    "weight_for_age": ("Weight-for-age", "kg", [("weight_for_age", "WHO"), ("weight_for_age", "CDC")]),
-    "length_height_for_age": ("Length/height-for-age", "cm", [("length_for_age", "WHO"), ("height_for_age", "CDC")]),
-    "bmi_for_age": ("BMI-for-age", "kg/m2", [("bmi_for_age", "WHO"), ("bmi_for_age", "CDC")]),
-    "head_circumference_for_age": ("Head circumference-for-age", "cm", [("head_circumference_for_age", "WHO"), ("head_circumference_for_age", "CDC")]),
+    "weight_for_age": ("Weight-for-age", "kg", ["weight_for_age"]),
+    "length_height_for_age": ("Length/height-for-age", "cm", ["length_for_age", "height_for_age"]),
+    "bmi_for_age": ("BMI-for-age", "kg/m2", ["bmi_for_age"]),
+    "head_circumference_for_age": ("Head circumference-for-age", "cm", ["head_circumference_for_age"]),
 }
 
 # Indicators charting doesn't support yet -- see module docstring.
 UNCHARTED_INDICATORS = {"weight_for_length", "weight_for_stature"}
+
+# Representative ages guaranteed to fall inside a WHO or CDC table's valid
+# range respectively, for reusing growth._select_table's real table-selection
+# logic (which requires an axis value) rather than reimplementing it.
+_WHO_PROBE_AGE_MONTHS = 0.0
+_CDC_PROBE_AGE_MONTHS = growth.WHO_CDC_HANDOFF_MONTHS
 
 SVG_WIDTH, SVG_HEIGHT = 720, 380
 MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM = 56, 16, 24, 40
@@ -69,15 +80,13 @@ def _curve_points(standard: str, indicator: str, sex: str, age_max_months: float
     """Returns [(age_months, L, M, S)] rows sampled at the reference table's own
     tabulated ages -- no smoothing/interpolation introduced beyond what the
     table already represents. Clamped to the WHO/CDC default-selection
-    boundary (24 months, see references/METHODOLOGY.md section 2) rather than
-    each table's full physical extent, so a WHO curve doesn't visually
-    overlap the CDC curve past the point where the engine would actually
-    switch standards for a default (non-override) lookup."""
-    candidates = growth.REGISTRY.get((standard, indicator), [])
-    covering = [t for t in candidates if t.axis_semantic == "age"]
-    if not covering:
+    boundary (see references/METHODOLOGY.md section 2) rather than each
+    table's full physical extent, so a WHO curve doesn't visually overlap a
+    CDC curve drawn for the same panel."""
+    probe_age = _WHO_PROBE_AGE_MONTHS if standard == "WHO" else _CDC_PROBE_AGE_MONTHS
+    spec = growth._select_table(standard, indicator, probe_age)
+    if spec is None or spec.axis_semantic != "age":
         return None
-    spec = max(covering, key=lambda t: t.range_min)
     table = growth._load_table(spec)
     sex_code = growth.SEX_CODE[sex]
     rows = table[sex_code]
@@ -97,20 +106,21 @@ def _curve_points(standard: str, indicator: str, sex: str, age_max_months: float
     return out
 
 
-def _build_panel_svg(title: str, unit: str, curves_by_standard: dict, patient_points: list[dict]) -> str:
+def _build_panel_svg(title: str, unit: str, curves: list[tuple[str, list]], patient_points: list[dict]) -> str:
+    safe_title = html.escape(title)
     all_ages = [p["age_months"] for p in patient_points]
-    for standard_curves in curves_by_standard.values():
-        for row in standard_curves:
+    for _label, rows in curves:
+        for row in rows:
             all_ages.append(row[0])
     all_values = [p["value"] for p in patient_points]
-    for standard_curves in curves_by_standard.values():
-        for row in standard_curves:
+    for _label, rows in curves:
+        for row in rows:
             L, M, S = row[1], row[2], row[3]
             for pct in (PERCENTILE_LINES[0], PERCENTILE_LINES[-1]):
                 all_values.append(growth.lms_value_at_z(_Z_BY_PERCENTILE[pct], L, M, S))
 
     if not all_ages or not all_values:
-        return f'<div class="panel"><h3>{title}</h3><p class="empty">No data for this indicator.</p></div>'
+        return f'<div class="panel"><h3>{safe_title}</h3><p class="empty">No data for this indicator.</p></div>'
 
     age_min, age_max = 0.0, max(all_ages) * 1.0 or 1.0
     val_min, val_max = min(all_values), max(all_values)
@@ -126,12 +136,12 @@ def _build_panel_svg(title: str, unit: str, curves_by_standard: dict, patient_po
         return MARGIN_TOP + (1 - frac) * PLOT_H
 
     svg_parts = [
-        f'<svg viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}" class="chart" data-title="{title}">',
+        f'<svg viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}" class="chart" data-title="{safe_title}">',
         f'<rect x="{MARGIN_LEFT}" y="{MARGIN_TOP}" width="{PLOT_W}" height="{PLOT_H}" fill="none" stroke="#ccc"/>',
     ]
 
-    # percentile curves, one polyline per percentile per standard present
-    for standard, rows in curves_by_standard.items():
+    # percentile curves, one polyline per percentile per (indicator, standard) pair present
+    for _label, rows in curves:
         if not rows:
             continue
         for pct in PERCENTILE_LINES:
@@ -155,27 +165,31 @@ def _build_panel_svg(title: str, unit: str, curves_by_standard: dict, patient_po
         svg_parts.append(f'<polyline points="{path}" fill="none" stroke="#c53030" stroke-width="2.2"/>')
         for p in ordered:
             cx, cy = x(p["age_months"]), y(p["value"])
+            if p["percentile"] is None:
+                pct_text = "reference unavailable"
+            else:
+                pct_text = f"{p['percentile']:.1f}th pct ({p['reference']})"
             tooltip = (
-                f"age {p['age_months']:.1f}mo | {p['value']:.2f} {unit} | "
-                f"{p['percentile']:.1f}th pct ({p['reference']})"
+                f"age {p['age_months']:.1f}mo | {p['value']:.2f} {unit} | {pct_text}"
                 + (f" | flags: {', '.join(p['flags'])}" if p["flags"] else "")
             )
             svg_parts.append(
                 f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="4.5" fill="#c53030" '
-                f'class="patient-point" data-tooltip="{tooltip}"/>'
+                f'class="patient-point" data-tooltip="{html.escape(tooltip)}"/>'
             )
 
     svg_parts.append(f'<text x="{MARGIN_LEFT}" y="{SVG_HEIGHT - 8}" class="axis-label">age (months)</text>')
     svg_parts.append(
         f'<text x="8" y="{MARGIN_TOP + 10}" class="axis-label" '
-        f'transform="rotate(-90, 14, {MARGIN_TOP + 10})">{unit}</text>'
+        f'transform="rotate(-90, 14, {MARGIN_TOP + 10})">{html.escape(unit)}</text>'
     )
     svg_parts.append("</svg>")
 
-    return f'<div class="panel"><h3>{title}</h3>{"".join(svg_parts)}</div>'
+    return f'<div class="panel"><h3>{safe_title}</h3>{"".join(svg_parts)}</div>'
 
 
 def render_patient_html(patient_id: str, results: list[dict]) -> str:
+    safe_patient_id = html.escape(patient_id)
     by_indicator: dict[str, list[dict]] = {}
     for r in results:
         by_indicator.setdefault(r["indicator"], []).append(r)
@@ -183,8 +197,7 @@ def render_patient_html(patient_id: str, results: list[dict]) -> str:
     uncharted_present = sorted(set(by_indicator) & UNCHARTED_INDICATORS)
 
     panels_html = []
-    for panel_key, (title, unit, indicator_standard_pairs) in PANELS.items():
-        indicator_names = {ind for ind, _standard in indicator_standard_pairs}
+    for title, unit, indicator_names in PANELS.values():
         points = []
         for ind in indicator_names:
             points.extend(by_indicator.get(ind, []))
@@ -192,25 +205,34 @@ def render_patient_html(patient_id: str, results: list[dict]) -> str:
             continue
         sex = points[0]["sex"]
         max_age = max(p["age_months"] for p in points)
-        curves_by_standard = {}
-        for ind, standard in indicator_standard_pairs:
+
+        # Which (indicator, standard) pairs to draw a curve for is derived
+        # from what actually occurs in this patient's own results, not
+        # assumed -- the engine's default (non-override) selection can
+        # produce either standard for the same indicator depending on age
+        # (e.g. CDC length_for_age for a recumbent-length measurement at
+        # 24-36 months is a real default case, not override-only).
+        observed_pairs = sorted({(p["indicator"], p["reference"]) for p in points if p["reference"]})
+        curves = []
+        for ind, standard in observed_pairs:
             rows = _curve_points(standard, ind, sex, max_age * 1.15)
             if rows:
-                curves_by_standard[standard] = rows
-        panels_html.append(_build_panel_svg(title, unit, curves_by_standard, points))
+                curves.append((f"{ind}:{standard}", rows))
+        panels_html.append(_build_panel_svg(title, unit, curves, points))
 
     limitations_note = ""
     if uncharted_present:
+        escaped = ", ".join(html.escape(i) for i in uncharted_present)
         limitations_note = (
             f'<p class="limitation">Not charted (no age x-axis available for these yet): '
-            f'{", ".join(uncharted_present)}. See scripts/chart.py docstring.</p>'
+            f"{escaped}. See scripts/chart.py docstring.</p>"
         )
 
     return f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Growth chart -- {patient_id}</title>
+<title>Growth chart -- {safe_patient_id}</title>
 <style>
 body {{ font-family: system-ui, sans-serif; margin: 24px; color: #1a202c; }}
 h1 {{ font-size: 1.3rem; }}
@@ -230,7 +252,7 @@ h3 {{ font-size: 1rem; margin-bottom: 4px; }}
 </style>
 </head>
 <body>
-<h1>Growth chart -- patient {patient_id}</h1>
+<h1>Growth chart -- patient {safe_patient_id}</h1>
 <p class="disclaimer">Orientation aid only, not a clinical-grade chart image or a
 diagnostic tool. Blue dashed lines are standard percentile curves (3rd-97th,
 median in solid blue); red is this patient's own trajectory. Hover a red
@@ -263,10 +285,10 @@ def generate_charts(results: list[dict], out_dir: Path) -> list[Path]:
 
     written = []
     for patient_id, patient_results in by_patient.items():
-        html = render_patient_html(patient_id, patient_results)
+        html_text = render_patient_html(patient_id, patient_results)
         safe_id = "".join(c if c.isalnum() or c in "-_" else "_" for c in patient_id)
         out_path = out_dir / f"chart_{safe_id}.html"
-        out_path.write_text(html)
+        out_path.write_text(html_text)
         written.append(out_path)
     return written
 

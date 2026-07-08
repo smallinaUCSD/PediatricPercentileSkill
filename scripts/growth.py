@@ -175,11 +175,13 @@ def _load_table(spec: TableSpec) -> dict[int, list[tuple]]:
         sigma_key = fieldmap.get("sigma")
         p95_key = fieldmap.get("p95")
         for row in reader:
-            if row[sex_key] == reader.fieldnames[0]:
+            if row[sex_key] == sex_key:
                 # Some CDC source files (e.g. cdc_lenageinf.csv, cdc_bmiagerev.csv)
                 # repeat the header row at the male/female transition -- this is
                 # how CDC publishes them, not a corruption of our copy, so we skip
-                # it here rather than edit the checksummed data file.
+                # it here rather than edit the checksummed data file. Checking
+                # against the sex column's own header (not column 0) means this
+                # still works if a future file's sex column isn't first.
                 continue
             sex_code = int(row[sex_key])
             axis_val = float(row[axis_key])

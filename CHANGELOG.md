@@ -3,6 +3,71 @@
 All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+- `evals/scorer.py`'s `json_block` scoring gained an optional
+  `check_prose_consistency` flag: cross-checks any "Xth percentile"
+  claim in an agent's prose against its own appended JSON block, so a
+  correct JSON paired with a different stated number to the human reader
+  is caught. Enabled on `s1`/`s2`. First run caught a fidelity bug in
+  `evals/responses/s1_fhir_happy_path.txt` itself (an earlier manual
+  excerpt to 8 of the real 44 entries broke consistency with the
+  prose, which was written against the full set) -- fixed by restoring
+  the complete response; see `EVALUATION.md`.
+
+### Fixed (LLM-agnostic audit)
+- `AGENTS.md`'s "Commands" section listed `claude plugin validate .`
+  alongside universally-runnable commands (`uv sync`, `uv run pytest`)
+  with no caveat, in a file whose entire stated purpose is being
+  canonical for *any* agent. Moved it to its own note explaining it's
+  Claude Code-specific. No other Claude-specific assumptions found in
+  `SKILL.md`, `AGENTS.md`, `CLAUDE.md`, or any adapter/engine code --
+  Claude Code mentions elsewhere (README's install section, `RELEASING.md`'s
+  plugin-verification steps, `CONTRIBUTING.md`'s release checklist) are
+  already correctly scoped to the one thing that's genuinely Claude
+  Code-specific: validating the `.claude-plugin/` manifests themselves.
+
+### Fixed
+An 8-angle code review (correctness, removed-behavior, cross-file,
+reuse, simplification, efficiency, altitude, conventions -- run as
+parallel independent passes, then verified) of the v0.2.0 diff found and
+verified 7 real issues, all fixed here:
+
+- **`scripts/chart.py` silently omitted a valid percentile curve.** The
+  length/height-for-age panel assumed `length_for_age` only ever uses
+  the WHO standard, but the engine's default (non-override) selection
+  produces `CDC`/`length_for_age` for any recumbent-length measurement
+  at 24-36 months (`cdc_lenageinf.csv` covers 0-36mo) -- an ordinary,
+  unremarkable case, not an edge case. Fixed by deriving which
+  (indicator, standard) pairs get a curve from what actually appears in
+  the patient's own results, instead of a hardcoded assumption that can
+  drift from the engine's real behavior.
+- `scripts/chart.py` crashed with `TypeError` when a result was flagged
+  `reference_unavailable` (`percentile`/`z_score` are `None` in that
+  case) -- now renders the point with a "reference unavailable" tooltip
+  instead of a formatted percentile.
+- `scripts/chart.py` interpolated `patient_id` unescaped into HTML, so a
+  patient ID containing markup (from an untrusted FHIR/CSV source) could
+  inject content into the locally-opened chart file. Now HTML-escaped.
+- `scripts/chart.py`'s table selection reimplemented (and subtly
+  under-specified, missing an age-coverage check) `growth._select_table`
+  in a second place; now calls it directly.
+- `scripts/growth.py`'s repeated-header-row skip (added in v0.2.0)
+  detected the sentinel row by comparing against the *first* CSV column,
+  which only worked because the sex column happens to be first in every
+  current file. Now compares against the sex column's own header
+  regardless of position.
+- `adapters/flat.py`'s `--map` flag crashed with an unhandled
+  `AttributeError` if the JSON file wasn't an object; now raises the
+  same `AdapterError` every other bad-input path in the module uses.
+- `adapters/flat.py` treated a legitimate falsy value (e.g. `value: 0`)
+  as a missing required field; now checks for `None`/empty-string
+  explicitly.
+
+Regression tests added for all seven in `tests/test_chart.py`,
+`tests/test_adapters.py`, and `tests/test_engine.py`.
+
 ## [0.2.0] - 2026-07-08
 
 ### Added

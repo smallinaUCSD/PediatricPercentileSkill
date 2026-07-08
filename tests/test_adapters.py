@@ -244,6 +244,28 @@ def test_flat_cli_with_map_flag(tmp_path):
 
 
 # --------------------------------------------------------------------------
+# Regression tests for code-review findings (see CHANGELOG.md)
+# --------------------------------------------------------------------------
+
+
+def test_flat_rejects_non_dict_column_map():
+    """Regression test: a non-dict --map file used to crash with an
+    unhandled AttributeError instead of the module's normal AdapterError."""
+    with pytest.raises(AdapterError, match="column_map must be"):
+        flat.parse_csv(str(FIXTURES / "flat_measurements.csv"), column_map=[1, 2, 3])
+
+
+def test_flat_accepts_falsy_zero_as_a_present_value():
+    """Regression test: `not _get(...)` treated a legitimate 0 as missing."""
+    row = {
+        "patient_id": "p1", "sex": "male", "birth_date": "2020-01-01",
+        "observation_date": "2020-01-01", "metric": "weight", "value": 0, "unit": "kg",
+    }
+    record = flat._row_to_record(row, row_num=2)
+    assert record["value"] == 0.0
+
+
+# --------------------------------------------------------------------------
 # Shared sex normalization
 # --------------------------------------------------------------------------
 

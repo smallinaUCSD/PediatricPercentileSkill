@@ -51,15 +51,20 @@ REQUIRED_FIELDS = ("patient_id", "sex", "birth_date", "observation_date", "metri
 OPTIONAL_NUMERIC_FIELDS = ("age_months", "gestational_age_weeks")
 
 
-def _get(row: dict, column_map: dict[str, str] | None, canonical_name: str):
-    source_key = (column_map or {}).get(canonical_name, canonical_name)
+def _get(row: dict, column_map: dict[str, str], canonical_name: str):
+    source_key = column_map.get(canonical_name, canonical_name)
     return row.get(source_key)
 
 
+def _is_missing(value) -> bool:
+    return value is None or value == ""
+
+
 def _row_to_record(row: dict, *, row_num: int, column_map: dict[str, str] | None = None) -> dict:
-    missing = [f for f in REQUIRED_FIELDS if not _get(row, column_map, f)]
+    column_map = column_map or {}
+    missing = [f for f in REQUIRED_FIELDS if _is_missing(_get(row, column_map, f))]
     if missing:
-        source_names = [(column_map or {}).get(f, f) for f in missing]
+        source_names = [column_map.get(f, f) for f in missing]
         raise AdapterError(
             f"row {row_num}: missing required field(s): {', '.join(missing)} "
             f"(looked for column(s): {', '.join(source_names)})"
@@ -92,7 +97,17 @@ def _row_to_record(row: dict, *, row_num: int, column_map: dict[str, str] | None
     return build_record(**kwargs)
 
 
+def _validate_column_map(column_map: dict[str, str] | None) -> None:
+    if column_map is None:
+        return
+    if not isinstance(column_map, dict) or not all(isinstance(v, str) for v in column_map.values()):
+        raise AdapterError(
+            f"column_map must be a JSON object of canonical field name -> your column name, got {column_map!r}"
+        )
+
+
 def parse_csv(path: str, *, column_map: dict[str, str] | None = None) -> list[dict]:
+    _validate_column_map(column_map)
     with open(path, newline="") as f:
         return [
             _row_to_record(row, row_num=i, column_map=column_map)
@@ -101,6 +116,7 @@ def parse_csv(path: str, *, column_map: dict[str, str] | None = None) -> list[di
 
 
 def parse_json(path: str, *, column_map: dict[str, str] | None = None) -> list[dict]:
+    _validate_column_map(column_map)
     with open(path) as f:
         raw = json.load(f)
     if not isinstance(raw, list):

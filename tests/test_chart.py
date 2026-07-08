@@ -117,3 +117,64 @@ def test_cli_end_to_end(tmp_path):
     exit_code = chart._main(["chart.py", str(results_path), "--out-dir", str(out_dir)])
     assert exit_code == 0
     assert len(list(out_dir.glob("chart_*.html"))) == 1
+
+
+# --------------------------------------------------------------------------
+# Regression tests for code-review findings (see CHANGELOG.md)
+# --------------------------------------------------------------------------
+
+
+def test_cdc_length_for_age_default_case_gets_a_curve():
+    """Regression test: a recumbent-length measurement at 24-36 months
+    resolves to CDC by DEFAULT (not just via explicit override) since
+    cdc_lenageinf.csv covers 0-36 months -- chart.py must not assume
+    length_for_age is WHO-only. Previously this patient's point would be
+    plotted with no percentile curve behind it."""
+    r_who = growth.compute_for_age(
+        growth.MeasurementRecord("p", "male", "2020-01-01", "2020-01-01", "length_recumbent", 80.0, "cm", age_months=10.0)
+    )
+    r_cdc = growth.compute_for_age(
+        growth.MeasurementRecord("p", "male", "2020-01-01", "2020-01-01", "length_recumbent", 88.0, "cm", age_months=30.0)
+    )
+    assert r_cdc.reference == "CDC"  # confirms this is the real default behavior, not a test setup error
+
+    results = [dataclasses.asdict(r_who), dataclasses.asdict(r_cdc)]
+    curves_seen = set()
+    points = [r for r in results if r["indicator"] in ("length_for_age", "height_for_age")]
+    sex = points[0]["sex"]
+    max_age = max(p["age_months"] for p in points)
+    for ind, standard in sorted({(p["indicator"], p["reference"]) for p in points}):
+        if chart._curve_points(standard, ind, sex, max_age * 1.15):
+            curves_seen.add((ind, standard))
+    assert ("length_for_age", "WHO") in curves_seen
+    assert ("length_for_age", "CDC") in curves_seen
+
+
+def test_render_patient_html_handles_reference_unavailable_without_crashing():
+    """Regression test: percentile/z_score are None whenever a result is
+    flagged reference_unavailable; the tooltip formatter must not crash."""
+    r = growth.compute_for_age(
+        growth.MeasurementRecord("p", "male", "2020-01-01", "2020-01-01", "head_circumference", 50.0, "cm", age_months=48)
+    )
+    assert r.percentile is None and "reference_unavailable" in r.flags  # confirms the precondition
+    html_out = chart.render_patient_html("p", [dataclasses.asdict(r)])
+    assert "reference unavailable" in html_out
+
+
+def test_render_patient_html_escapes_patient_id():
+    """Regression test: patient_id was interpolated unescaped into HTML,
+    so a patient_id containing markup could inject into the chart file."""
+    malicious_id = 'p"</title><script>alert(1)</script>'
+    html_out = chart.render_patient_html(malicious_id, [])
+    assert "<script>alert(1)</script>" not in html_out
+    assert "&lt;script&gt;" in html_out
+
+
+def test_curve_points_uses_growth_select_table_not_a_reimplementation():
+    """Regression test: _curve_points used to pick a table via its own
+    max(range_min) without checking age coverage, which happened to work
+    only by coincidence. It should now delegate to growth._select_table."""
+    rows = chart._curve_points("CDC", "weight_for_age", "male", age_max_months=100)
+    spec = growth._select_table("CDC", "weight_for_age", chart._CDC_PROBE_AGE_MONTHS)
+    assert rows is not None
+    assert spec.filename == "cdc_wtage.csv"

@@ -38,6 +38,7 @@
         "percentile": 12.3,
         "percentile_tolerance": 1.0
       }
-    ]
+    ],
+    "check_prose_consistency": true
   }
 }

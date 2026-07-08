@@ -185,3 +185,33 @@ def test_cli_round_trip(tmp_path):
     assert len(output) == 1
     assert output[0]["indicator"] == "weight_for_age"
     assert output[0]["reference"] == "WHO"
+
+
+def test_load_table_skips_repeated_header_regardless_of_column_order(tmp_path):
+    """Regression test for a code-review finding: the repeated-header-row
+    skip used to compare against reader.fieldnames[0] (column 0), which
+    only worked because Sex happens to be the first column in every
+    current CDC file. This proves the fix checks the sex column's own
+    header, not position, by using a synthetic file where Sex is NOT
+    column 0."""
+    csv_path = tmp_path / "synthetic_reordered.csv"
+    csv_path.write_text(
+        "Agemos,Sex,L,M,S\n"
+        "0,1,1.0,10.0,0.1\n"
+        "1,1,1.0,10.5,0.1\n"
+        "Agemos,Sex,L,M,S\n"  # repeated header, sex NOT in column 0
+        "0,2,1.0,9.5,0.1\n"
+        "1,2,1.0,10.0,0.1\n"
+    )
+    spec = growth.TableSpec(csv_path.name, "Agemos", "Sex", "age", "months", 0, 1)
+    # _load_table resolves paths under growth.DATA_DIR, so point it at our tmp_path
+    original_data_dir = growth.DATA_DIR
+    growth.DATA_DIR = tmp_path
+    try:
+        growth._load_table.cache_clear()
+        table = growth._load_table(spec)
+    finally:
+        growth.DATA_DIR = original_data_dir
+        growth._load_table.cache_clear()
+    assert len(table[1]) == 2
+    assert len(table[2]) == 2
