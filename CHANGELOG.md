@@ -3,7 +3,35 @@
 All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.1.0] - 2026-07-02
+## [Unreleased]
+
+### Added
+- `AGENTS.md` — canonical instructions for any coding agent working on
+  this repo (build/test commands, hard constraints, domain vocabulary);
+  `CLAUDE.md` is now a one-line `@AGENTS.md` pointer so the two don't
+  drift apart.
+- `RELEASING.md` — the release checklist, expanded out of a one-line
+  note that used to live in `CONTRIBUTING.md`.
+- `.github/PULL_REQUEST_TEMPLATE.md` and `.github/ISSUE_TEMPLATE/`
+  (bug report + feature request) — contributing was previously prose-only
+  with no scaffolding.
+- A "Pull requests" section in `CONTRIBUTING.md` spelling out the actual
+  PR process (branch, test, CI, CODEOWNER review, small-PR guidance).
+
+### Changed
+- README rewritten for a human-first, agent-agnostic flow: install
+  (Claude Code plugin, or any agent that reads `SKILL.md` directly) →
+  first result (a plain-English prompt, no terminal) → bring-your-own-data
+  → how it works → limitations, with terminal/`uv run` commands moved out
+  to `CONTRIBUTING.md`. All internal doc references are now clickable
+  relative links instead of plain backticked paths.
+- Clarified that `age_months` can be supplied directly or derived from
+  `birth_date`/`observation_date` — this already worked, it just wasn't
+  documented as a deliberate either/or choice.
+
+### Removed
+- A stray `records.json` left at the repo root from manual testing.
+
 
 ### Added
 - Repo scaffold: uv-managed Python project, directory layout, MIT license.

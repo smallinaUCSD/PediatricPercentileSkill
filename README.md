@@ -1,129 +1,159 @@
 # growth-percentile-skill
 
+[![CI](https://github.com/smallinaUCSD/PediatricPercentileSkill/actions/workflows/ci.yml/badge.svg)](https://github.com/smallinaUCSD/PediatricPercentileSkill/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![v0.1.0](https://img.shields.io/badge/version-0.1.0-informational.svg)](CHANGELOG.md)
+
 An open-source **Agent Skill** that computes pediatric growth percentiles
 and z-scores from patient measurements, against the CDC and WHO growth
-standards — using frozen, tested, deterministic code, not model arithmetic.
+standards — using a frozen, tested, deterministic engine, not model
+arithmetic. As far as we've been able to find, it's the first agent-native
+(SKILL.md-based) tool for this — everything else in this space is a
+library you'd import and write code against.
 
-> Point any skill-compatible agent at this repo, hand it a patient's
-> measurements (FHIR bundle, Synthea export, or a plain table), and it
-> returns auditable growth percentiles with full provenance back to the
-> source data row.
+> Point any coding agent at this repo, hand it a patient's measurements
+> (FHIR bundle, Synthea export, or a plain table), and it returns
+> auditable growth percentiles with full provenance back to the source
+> data row.
 
-## Status
+**New here?** Skip to [Install](#install), then
+[get your first result](#get-your-first-result) — no terminal required.
 
-v0.1.0. The calculation engine (`scripts/growth.py`), the three ingestion
-adapters (`adapters/fhir_r4.py`, `adapters/synthea.py`, `adapters/flat.py`),
-`SKILL.md`, a Claude Code plugin manifest, an end-to-end demo
-(`demo/warren_synthea.md`), and an agent-behavioral eval suite (`evals/`,
-`EVALUATION.md`) are implemented and tested (68 unit/integration tests,
-all passing) — including against real Synthea-generated FHIR and CSV
-fixtures, not synthetic-looking hand-written ones. See `references/` for
-the locked design and `CHANGELOG.md` for what shipped in each phase.
+## Install
 
-## Installation
-
-**As a Claude Code plugin** (recommended — gives you `/plugin update`):
+**Claude Code** (recommended path — tested end-to-end, gives you `/plugin update`):
 
 ```
 /plugin marketplace add smallinaUCSD/PediatricPercentileSkill
 /plugin install growth-percentile@growth-percentile-skill
 ```
 
-**As a raw skill**, for any skill-compatible agent: drop this repo's
-folder into the agent's skills directory (e.g. `~/.claude/skills/`) —
-`SKILL.md` is discovered automatically. See `SKILL.md` for the workflow
-an agent follows, and `demo/warren_synthea.md` for a full worked example.
+**Cursor, Codex, or any other coding agent that reads plain markdown:**
+[`SKILL.md`](SKILL.md) is a self-contained instruction file — no special
+packaging required. Point your agent at it directly, e.g.:
 
-Either way, the underlying engine needs [`uv`](https://docs.astral.sh/uv/)
-on the machine that runs it (see Development setup below) — the plugin/skill
-install step does not bundle a Python environment.
+- Cursor: copy [`SKILL.md`](SKILL.md) into `.cursor/rules/growth-percentile.md`
+  in your project (or reference its path directly in a prompt).
+- Codex / any agent that accepts a system prompt or a "read this file
+  first" instruction: tell it to read [`SKILL.md`](SKILL.md) and follow it.
 
-## Why
+We've verified the Claude Code plugin path with a real install/uninstall
+cycle; the general markdown path is untested on other agents specifically
+but should work anywhere the agent can read a file and follow instructions
+in it — [let us know](https://github.com/smallinaUCSD/PediatricPercentileSkill/issues)
+if it doesn't.
 
-Existing open-source growth tools (R `anthro`, `zscorer`, `pygrowup`, WHO
-igrowup) are libraries: a developer imports them and writes code. This is
-instead a `SKILL.md`-based capability an LLM agent discovers and uses
-directly, with the arithmetic delegated to a small, frozen, unit-tested
-Python engine that never enters the model's context.
+**Cloning the repo directly** is the last-resort path — only needed if
+you're developing the skill itself, not using it. See
+[CONTRIBUTING.md](CONTRIBUTING.md) if that's you.
 
-## Design
+Either way, the machine actually running the engine needs
+[`uv`](https://docs.astral.sh/uv/) installed — the plugin/skill install
+step doesn't bundle a Python environment.
 
-- **Deterministic engine, not model math.** All LMS-transform arithmetic
-  runs in `scripts/growth.py`, tested against frozen golden vectors.
-- **Ingestion decoupled from calculation.** A single canonical
-  `MeasurementRecord` schema (`references/CANONICAL_SCHEMA.md`) is the
-  only contract the engine understands; adapters (FHIR R4, Synthea, flat
-  CSV/JSON) map real-world sources into it.
-- **Correctness proven, not asserted.** Golden test vectors from
-  independent authoritative sources, protected from modification by
-  CODEOWNERS + a fixture checksum gate, plus an agent-behavioral eval.
+## Get your first result
 
-See `references/METHODOLOGY.md` for the exact formulas and clinical
-decision rules (WHO vs CDC selection, extended BMI-for-age, prematurity
-handling).
+Once installed, just ask your agent — in plain English, no terminal:
 
-## Development setup
+> Using the growth-percentile skill: what percentile is a 9-month-old
+> boy at 9.7 kg?
 
-Requires [`uv`](https://docs.astral.sh/uv/).
+The agent reads [`SKILL.md`](SKILL.md), figures out it needs the
+CDC/WHO weight-for-age standard, runs the (fake, made-up-for-this-example)
+numbers through the deterministic engine, and comes back with a
+percentile, a z-score, which reference standard it used, and any data
+quality flags — not a number it computed itself.
 
-```bash
-uv sync          # creates .venv and installs dependencies
-uv run pytest    # run the test suite
-```
+Want to see this on a real, fuller patient record first?
+[`demo/warren_synthea.md`](demo/warren_synthea.md) walks through a
+complete FHIR bundle end to end, including the automatic WHO→CDC
+handoff as the patient ages.
 
-## Trying it out
+## Bring your own data
 
-Directly, with a hand-written record:
+The skill accepts three input shapes — tell your agent which one you have,
+or just hand it the file and let it figure out which adapter applies:
 
-```bash
-echo '[{"patient_id":"demo","sex":"male","birth_date":"2020-01-01","observation_date":"2020-10-15","metric":"weight","value":9.7,"unit":"kg"}]' > /tmp/records.json
-uv run scripts/growth.py /tmp/records.json
-```
+| Your data looks like | What happens |
+|---|---|
+| A FHIR R4 `Bundle` (one `Patient` + `Observation`s) | [`adapters/fhir_r4.py`](adapters/fhir_r4.py) maps it in |
+| Synthea's `patients.csv` + `observations.csv` export | [`adapters/synthea.py`](adapters/synthea.py) maps it in |
+| A spreadsheet / CSV / JSON you already have | [`adapters/flat.py`](adapters/flat.py) — see column spec below |
 
-Through an adapter, with a real Synthea-generated patient (see
-`tests/fixtures/README.md` for provenance):
+For the flat CSV/JSON path, each row/record needs these columns:
+`patient_id`, `sex` (`male`/`female`), `birth_date`, `observation_date`,
+`metric` (`weight` / `height_standing` / `length_recumbent` /
+`head_circumference` / `bmi`), `value`, `unit`.
 
-```bash
-uv run adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > /tmp/records.json
-uv run scripts/growth.py /tmp/records.json
+**Age is configurable both ways:** if you have a birth date and an
+observation date, age is derived automatically. If you'd rather supply
+age directly (e.g. you've already done a corrected-age calculation for a
+preterm infant), add an optional `age_months` column/field and it takes
+precedence over the derived value. There's also an optional
+`gestational_age_weeks` field for flagging prematurity considerations.
+Full field-by-field spec: [`references/CANONICAL_SCHEMA.md`](references/CANONICAL_SCHEMA.md).
 
-uv run adapters/synthea.py tests/fixtures/synthea_patients.csv tests/fixtures/synthea_observations.csv > /tmp/records.json
-uv run scripts/growth.py /tmp/records.json
-```
+Fixed column names only in v1 (no arbitrary remapping yet) — see
+[CHANGELOG.md](CHANGELOG.md) for what's planned.
 
-## Evaluation
+## How it works
 
-`EVALUATION.md` documents an agent-behavioral eval suite — five scenarios
-run against real Claude subagents (not just the engine's own unit tests)
-checking whether an agent *using this skill* picks the right adapter,
-reports the right numbers, and correctly surfaces edge cases (missing
-data, implausible values, out-of-scope requests) rather than guessing or
-computing outside the audited engine. Re-run with:
+The math is [Cole's LMS method](references/METHODOLOGY.md) — the same
+transform the CDC and WHO use to publish their own growth charts —
+implemented once, in a small frozen Python engine
+([`scripts/growth.py`](scripts/growth.py)), and never touched by the
+model. WHO's 2006 standards are used for ages 0–<24 months, CDC's 2000
+charts (plus the 2022 extended-BMI method for severe obesity) for
+24 months–20 years, matching CDC/AAP guidance — selected automatically
+from the patient's age, not left to the caller to get right.
 
-```bash
-uv run evals/run_eval.py --all
-```
+Full formulas, citations, and edge-case handling (the WHO/CDC boundary,
+length-vs-stature, extended BMI, CDC's modified-z-score plausibility
+check, prematurity):
+[`references/METHODOLOGY.md`](references/METHODOLOGY.md).
+
+## Limitations
+
+This is **v1**. In scope: weight, length/height, BMI, and
+head-circumference percentiles, ages 0–20, with automatic WHO/CDC
+selection. Deliberately **not** in scope yet, and clearly flagged when
+relevant rather than silently approximated:
+
+- Prematurity/gestational-age correction (flagged, not computed)
+- Condition-specific charts (Down syndrome, Turner syndrome, etc.)
+- Growth velocity / trend analysis across visits
+- Any chart/plot visualization (numeric output only, for now)
+- Arbitrary column remapping in the flat adapter (fixed schema only)
+
+This tool computes percentiles; it does not diagnose, and it is not a
+substitute for clinical judgment. It has not been evaluated or cleared
+by any regulatory body (e.g. FDA) as a medical device. Percentile
+results should be reviewed by a qualified clinician, especially anything
+flagged `implausible_value` or `reference_unavailable`.
+
+## Trust and evaluation
+
+- **Golden test suite:** 68 tests, all checked against real CDC/WHO data
+  files or CDC's own published worked examples — not invented numbers.
+  Frozen and CODEOWNER-protected (`tests/golden/`); see
+  [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Agent-behavioral eval:** [`EVALUATION.md`](EVALUATION.md) documents
+  running real Claude subagents through test scenarios to check whether
+  an agent *using this skill* behaves correctly — not just whether the
+  engine's math is right. One scenario failed on the first real run (an
+  agent hand-computed an out-of-scope number with a caveat attached);
+  the fix and re-verification are documented there too.
 
 ## Contributing
 
-See `CONTRIBUTING.md` — in particular, `tests/golden/` and `references/data/`
-are frozen and CODEOWNER-protected; read that file before touching either.
-
-## Disclaimer
-
-This tool computes growth percentiles; it does not diagnose, and it is
-not a substitute for clinical judgment. It has not been evaluated or
-cleared by any regulatory body (e.g. FDA) as a medical device. v1
-deliberately does not correct for prematurity, apply condition-specific
-growth charts, or compute growth velocity — see `references/METHODOLOGY.md`
-for the full list of what's in and out of scope. Percentile results should
-be reviewed by a qualified clinician, especially for `implausible_value`
-or `reference_unavailable` flagged results.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the PR process, and —
+important — which parts of this repo are frozen and require a CODEOWNER
+review before you touch them.
 
 ## Citation
 
-See `CITATION.cff`.
+See [CITATION.cff](CITATION.cff).
 
 ## License
 
-MIT — see `LICENSE`.
+MIT — see [LICENSE](LICENSE).
