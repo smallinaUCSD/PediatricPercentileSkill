@@ -1,0 +1,9 @@
+{
+  "patient_id": "id",
+  "sex": "gender",
+  "birth_date": "DOB",
+  "observation_date": "Visit Date",
+  "metric": "measurement_type",
+  "value": "Weight (kg)",
+  "unit": "units"
+}

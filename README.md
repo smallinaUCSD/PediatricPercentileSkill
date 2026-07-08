@@ -16,6 +16,11 @@ library you'd import and write code against.
 > auditable growth percentiles with full provenance back to the source
 > data row.
 
+![Example growth chart: weight, length/height, BMI, and head-circumference-for-age percentile curves with a real patient's trajectory plotted on top](assets/growth-chart-example.png)
+
+*A real, unedited screenshot of [`scripts/chart.py`](scripts/chart.py)'s
+output — see [Visualize it](#visualize-it).*
+
 **New here?** Skip to [Install](#install), then
 [get your first result](#get-your-first-result) — no terminal required.
 
@@ -83,7 +88,23 @@ or just hand it the file and let it figure out which adapter applies:
 For the flat CSV/JSON path, each row/record needs these columns:
 `patient_id`, `sex` (`male`/`female`), `birth_date`, `observation_date`,
 `metric` (`weight` / `height_standing` / `length_recumbent` /
-`head_circumference` / `bmi`), `value`, `unit`.
+`head_circumference` / `bmi`), `value`, `unit`. Extra columns your file
+happens to have are just ignored.
+
+**If your spreadsheet uses different column names** (e.g. `DOB` instead
+of `birth_date`, `Weight (kg)` instead of `value`), you don't need to
+rename anything — pass a column map instead:
+
+```bash
+uv run adapters/flat.py measurements.csv --map colmap.json
+```
+
+where `colmap.json` maps canonical field name → your column name, for
+just the columns that differ:
+
+```json
+{"birth_date": "DOB", "value": "Weight (kg)"}
+```
 
 **Age is configurable both ways:** if you have a birth date and an
 observation date, age is derived automatically. If you'd rather supply
@@ -93,10 +114,9 @@ precedence over the derived value. There's also an optional
 `gestational_age_weeks` field for flagging prematurity considerations.
 Full field-by-field spec: [`references/CANONICAL_SCHEMA.md`](references/CANONICAL_SCHEMA.md).
 
-Fixed column names only in v1 (no arbitrary remapping yet) — see
-[CHANGELOG.md](CHANGELOG.md) for what's planned.
-
 ## Visualize it
+
+(Example output: the screenshot at the top of this README.)
 
 Ask your agent to chart the results and it can run
 [`scripts/chart.py`](scripts/chart.py) on the engine's output: one
@@ -135,7 +155,6 @@ relevant rather than silently approximated:
 - Condition-specific charts (Down syndrome, Turner syndrome, etc.)
 - Growth velocity / trend analysis across visits
 - Weight-for-length/stature charting (numeric output only for those two indicators — see [Visualize it](#visualize-it))
-- Arbitrary column remapping in the flat adapter (fixed schema only)
 
 This tool computes percentiles; it does not diagnose, and it is not a
 substitute for clinical judgment. It has not been evaluated or cleared
@@ -145,7 +164,7 @@ flagged `implausible_value` or `reference_unavailable`.
 
 ## Trust and evaluation
 
-- **Golden test suite:** 81 tests, all checked against real CDC/WHO data
+- **Golden test suite:** 85 tests, all checked against real CDC/WHO data
   files or CDC's own published worked examples — not invented numbers.
   Frozen and CODEOWNER-protected (`tests/golden/`); see
   [CONTRIBUTING.md](CONTRIBUTING.md).

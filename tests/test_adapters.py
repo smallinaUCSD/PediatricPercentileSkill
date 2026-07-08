@@ -1,4 +1,5 @@
 import json
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -194,6 +195,52 @@ def test_flat_accepts_optional_age_months():
     }
     record = flat._row_to_record(row, row_num=2)
     assert record["age_months"] == 5.5
+
+
+def test_flat_csv_with_column_map_parses_arbitrary_column_names():
+    column_map = {
+        "patient_id": "id", "sex": "gender", "birth_date": "DOB",
+        "observation_date": "Visit Date", "metric": "measurement_type",
+        "value": "Weight (kg)", "unit": "units",
+    }
+    records = flat.parse_csv(str(FIXTURES / "flat_measurements_custom_columns.csv"), column_map=column_map)
+    assert len(records) == 2
+    assert records[0] == {
+        "patient_id": "flat-2", "sex": "female", "birth_date": "2023-06-01",
+        "observation_date": "2023-06-01", "metric": "weight", "value": 3.2, "unit": "kg",
+    }
+
+
+def test_flat_column_map_only_needs_to_cover_the_differing_columns():
+    # patient_id/metric/unit already match canonical names in this fixture;
+    # only the renamed columns need an entry.
+    row = {
+        "patient_id": "p1", "sex_col": "male", "birth_date": "2020-01-01",
+        "observation_date": "2020-06-01", "metric": "weight", "value": "8.0", "unit": "kg",
+    }
+    record = flat._row_to_record(row, row_num=2, column_map={"sex": "sex_col"})
+    assert record["sex"] == "male"
+
+
+def test_flat_column_map_error_message_names_the_looked_up_source_column():
+    with pytest.raises(AdapterError, match="DOB"):
+        flat._row_to_record(
+            {"patient_id": "p1", "sex": "male"}, row_num=2, column_map={"birth_date": "DOB"}
+        )
+
+
+def test_flat_cli_with_map_flag(tmp_path):
+    proc = subprocess.run(
+        [
+            sys.executable, str(Path(flat.__file__)),
+            str(FIXTURES / "flat_measurements_custom_columns.csv"),
+            "--map", str(FIXTURES / "flat_column_map.json"),
+        ],
+        capture_output=True, text=True, check=True,
+    )
+    records = json.loads(proc.stdout)
+    assert len(records) == 2
+    assert records[0]["patient_id"] == "flat-2"
 
 
 # --------------------------------------------------------------------------

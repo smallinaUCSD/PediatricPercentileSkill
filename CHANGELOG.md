@@ -28,6 +28,11 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   `WHO_CDC_HANDOFF_MONTHS` constant added to `scripts/growth.py` so the
   chart's curve-clamping and the engine's reference selection can't
   drift out of sync. `tests/test_chart.py` (12 tests).
+- `adapters/flat.py` accepts an optional column map (`--map colmap.json`
+  on the CLI, or `column_map=` as a library) so a spreadsheet with
+  differently-named columns (e.g. `DOB`, `Weight (kg)`) doesn't need to
+  be renamed first — only the columns that differ need an entry in the
+  map. 4 new tests in `tests/test_adapters.py`.
 
 ### Fixed
 - `cdc_lenageinf.csv` and `cdc_bmiagerev.csv` contain a repeated header
