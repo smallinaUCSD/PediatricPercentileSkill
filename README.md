@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/smallinaUCSD/PediatricPercentileSkill/actions/workflows/ci.yml/badge.svg)](https://github.com/smallinaUCSD/PediatricPercentileSkill/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![v0.1.0](https://img.shields.io/badge/version-0.1.0-informational.svg)](CHANGELOG.md)
+[![v0.2.0](https://img.shields.io/badge/version-0.2.0-informational.svg)](CHANGELOG.md)
 
 An open-source **Agent Skill** that computes pediatric growth percentiles
 and z-scores from patient measurements, against the CDC and WHO growth

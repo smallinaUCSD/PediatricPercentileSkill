@@ -1,6 +1,6 @@
 [project]
 name = "growth-percentile-skill"
-version = "0.1.0"
+version = "0.2.0"
 description = "Agent Skill for computing pediatric growth percentiles and z-scores against CDC and WHO growth standards"
 readme = "README.md"
 license = "MIT"

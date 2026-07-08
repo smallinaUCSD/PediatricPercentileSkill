@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.2.0] - 2026-07-08
 
 ### Added
 - `AGENTS.md` — canonical instructions for any coding agent working on
@@ -58,6 +58,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ### Removed
 - A stray `records.json` left at the repo root from manual testing.
 
+## [0.1.0] - 2026-07-02
 
 ### Added
 - Repo scaffold: uv-managed Python project, directory layout, MIT license.
