@@ -17,6 +17,27 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   with no scaffolding.
 - A "Pull requests" section in `CONTRIBUTING.md` spelling out the actual
   PR process (branch, test, CI, CODEOWNER review, small-PR guidance).
+- `scripts/chart.py` — self-contained, interactive HTML growth chart
+  generator. One file per patient, percentile curves (3rd-97th, reusing
+  the engine's own reference tables so a curve and a patient's own
+  percentile always come from the same source row) plus the patient's
+  trajectory, for every age-based indicator present. Pure SVG + vanilla
+  JS for hover tooltips — no charting library, no CDN, no new Python
+  dependency, works fully offline. Does not yet cover weight-for-length
+  or weight-for-stature (documented limitation, not silently dropped).
+  `WHO_CDC_HANDOFF_MONTHS` constant added to `scripts/growth.py` so the
+  chart's curve-clamping and the engine's reference selection can't
+  drift out of sync. `tests/test_chart.py` (12 tests).
+
+### Fixed
+- `cdc_lenageinf.csv` and `cdc_bmiagerev.csv` contain a repeated header
+  row at the male/female transition, which is how CDC actually publishes
+  these two files (not a corruption of our copy) but crashed
+  `scripts/growth.py`'s CSV parser whenever that exact combination was
+  hit — which nothing had exercised until building the chart feature
+  surfaced it. Fixed in `_load_table`; added
+  `cdc_length_for_age_explicit_override_12_5mo` to
+  `tests/golden/vectors.json` to close the coverage gap that let it hide.
 
 ### Changed
 - README rewritten for a human-first, agent-agnostic flow: install

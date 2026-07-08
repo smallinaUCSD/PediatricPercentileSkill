@@ -96,6 +96,18 @@ Full field-by-field spec: [`references/CANONICAL_SCHEMA.md`](references/CANONICA
 Fixed column names only in v1 (no arbitrary remapping yet) — see
 [CHANGELOG.md](CHANGELOG.md) for what's planned.
 
+## Visualize it
+
+Ask your agent to chart the results and it can run
+[`scripts/chart.py`](scripts/chart.py) on the engine's output: one
+self-contained, interactive HTML file per patient (open it in any
+browser, no server or internet connection needed), with standard
+percentile curves and the patient's own trajectory plotted on top —
+weight-for-age, length/height-for-age, BMI-for-age, and
+head-circumference-for-age, whichever the patient has data for. It's an
+orientation aid, not a clinical-grade chart image, and it doesn't yet
+cover weight-for-length/stature (see the script's docstring for why).
+
 ## How it works
 
 The math is [Cole's LMS method](references/METHODOLOGY.md) — the same
@@ -122,7 +134,7 @@ relevant rather than silently approximated:
 - Prematurity/gestational-age correction (flagged, not computed)
 - Condition-specific charts (Down syndrome, Turner syndrome, etc.)
 - Growth velocity / trend analysis across visits
-- Any chart/plot visualization (numeric output only, for now)
+- Weight-for-length/stature charting (numeric output only for those two indicators — see [Visualize it](#visualize-it))
 - Arbitrary column remapping in the flat adapter (fixed schema only)
 
 This tool computes percentiles; it does not diagnose, and it is not a
@@ -133,7 +145,7 @@ flagged `implausible_value` or `reference_unavailable`.
 
 ## Trust and evaluation
 
-- **Golden test suite:** 68 tests, all checked against real CDC/WHO data
+- **Golden test suite:** 81 tests, all checked against real CDC/WHO data
   files or CDC's own published worked examples — not invented numbers.
   Frozen and CODEOWNER-protected (`tests/golden/`); see
   [CONTRIBUTING.md](CONTRIBUTING.md).

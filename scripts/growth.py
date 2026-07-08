@@ -39,6 +39,9 @@ AGE_DAYS_PER_MONTH = 30.4375  # WHO convention (365.25 / 12)
 LB_TO_KG = 0.45359237
 IN_TO_CM = 2.54
 
+# WHO 0-<24mo / CDC 24mo-20yr, per references/METHODOLOGY.md section 2.
+WHO_CDC_HANDOFF_MONTHS = 24
+
 SEX_CODE = {"male": 1, "female": 2}
 
 METRIC_TO_AGE_INDICATOR = {
@@ -172,6 +175,12 @@ def _load_table(spec: TableSpec) -> dict[int, list[tuple]]:
         sigma_key = fieldmap.get("sigma")
         p95_key = fieldmap.get("p95")
         for row in reader:
+            if row[sex_key] == reader.fieldnames[0]:
+                # Some CDC source files (e.g. cdc_lenageinf.csv, cdc_bmiagerev.csv)
+                # repeat the header row at the male/female transition -- this is
+                # how CDC publishes them, not a corruption of our copy, so we skip
+                # it here rather than edit the checksummed data file.
+                continue
             sex_code = int(row[sex_key])
             axis_val = float(row[axis_key])
             L, M, S = float(row[l_key]), float(row[m_key]), float(row[s_key])
@@ -312,7 +321,7 @@ def _prematurity_flags(record: MeasurementRecord, age_months: float) -> list[str
     if (
         record.gestational_age_weeks is not None
         and record.gestational_age_weeks < 37
-        and age_months < 24
+        and age_months < WHO_CDC_HANDOFF_MONTHS
     ):
         return ["corrected_age_recommended"]
     return []
@@ -387,7 +396,7 @@ def compute_for_age(record: MeasurementRecord, *, reference_override: str | None
         raise GrowthEngineError(f"metric {record.metric!r} has no *-for-age indicator")
     age_months = _resolve_age_months(record)
     value = _normalize_metric_value(record.metric, record.value, record.unit)
-    standard = reference_override or ("WHO" if age_months < 24 else "CDC")
+    standard = reference_override or ("WHO" if age_months < WHO_CDC_HANDOFF_MONTHS else "CDC")
 
     spec, row = _lookup(standard, indicator, record.sex, age_months, None)
     if spec is None:
@@ -442,7 +451,7 @@ def compute_weight_for_length_or_stature(
     age_months = _resolve_age_months(weight_record)
     weight_kg = _normalize_metric_value("weight", weight_record.value, weight_record.unit)
     length_cm = _normalize_metric_value(length_or_height_record.metric, length_or_height_record.value, length_or_height_record.unit)
-    standard = reference_override or ("WHO" if age_months < 24 else "CDC")
+    standard = reference_override or ("WHO" if age_months < WHO_CDC_HANDOFF_MONTHS else "CDC")
 
     spec, row = _lookup(standard, indicator, weight_record.sex, age_months, length_cm)
     if spec is None:

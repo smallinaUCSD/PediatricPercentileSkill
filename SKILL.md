@@ -1,6 +1,6 @@
 ---
 name: growth-percentile
-description: Computes pediatric growth percentiles and z-scores (weight-for-age, length/height-for-age, weight-for-length/stature, BMI-for-age, head-circumference-for-age) against CDC and WHO growth standards, from a patient's measurements. Use when asked to calculate, interpret, or check a child's growth percentile, z-score, or position on a growth chart, or to assess/summarize growth for a pediatric patient given a FHIR bundle, a Synthea export, or a table of weight/height/head-circumference measurements. Do not use for adult BMI, for condition-specific growth charts (e.g. Down syndrome, Turner syndrome), or for growth-velocity/trend analysis across visits.
+description: Computes pediatric growth percentiles and z-scores (weight-for-age, length/height-for-age, weight-for-length/stature, BMI-for-age, head-circumference-for-age) against CDC and WHO growth standards, from a patient's measurements, and can render an interactive growth chart from the results. Use when asked to calculate, interpret, or check a child's growth percentile, z-score, or position on a growth chart, to plot/visualize a child's growth, or to assess/summarize growth for a pediatric patient given a FHIR bundle, a Synthea export, or a table of weight/height/head-circumference measurements. Do not use for adult BMI, for condition-specific growth charts (e.g. Down syndrome, Turner syndrome), or for growth-velocity/trend analysis across visits.
 ---
 
 # Growth percentile calculation
@@ -62,6 +62,22 @@ Each result has: `reference` (`WHO` or `CDC`, auto-selected by age —
 0-<24 months uses WHO, 24 months-20 years uses CDC), `indicator`,
 `z_score`, `percentile`, `flags`, and `provenance` (exact data file and
 formula used, for audit).
+
+## 2a. Optional: visualize the results
+
+If the user wants a chart, or a patient has several visits and a visual
+would help, run:
+
+```bash
+uv run scripts/chart.py records_output.json --out-dir charts/
+```
+
+This produces one self-contained, interactive HTML file per patient
+(open it in a browser — no server, no internet connection needed) with
+percentile curves and the patient's own trajectory. It only covers the
+age-based indicators (weight/length/height/BMI/head-circumference-for-age)
+— not weight-for-length or weight-for-stature yet. Offer this as an
+addition to the numeric summary, not a replacement for it.
 
 ## 3. Interpret and present results
 

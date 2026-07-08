@@ -70,6 +70,18 @@
       }
     },
     {
+      "id": "cdc_length_for_age_explicit_override_12_5mo",
+      "citation": "CDC infant length-for-age (cdc_lenageinf.csv), exact tabulated row Sex=1 Agemos=12.5: L=-0.753908107, M=76.11837536, S=0.038703461. This table has a repeated header row in the source file at the male/female transition (matches CDC's own published file) -- this vector exercises the explicit CDC-override path for length_for_age that the parser previously crashed on before that repeated-header row was handled (see scripts/growth.py _load_table).",
+      "record": {"patient_id": "b14", "sex": "male", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "length_recumbent", "value": 76.1, "unit": "cm", "age_months": 12.5},
+      "reference_override": "CDC",
+      "expect": {
+        "reference": "CDC", "indicator": "length_for_age",
+        "z_score": -0.006238619442729269, "z_tolerance": 1e-6,
+        "percentile": 49.75111670773554, "percentile_tolerance": 1e-4,
+        "flags": []
+      }
+    },
+    {
       "id": "cdc_head_circumference_30mo",
       "citation": "CDC head-circumference-for-age (cdc_hcageinf.csv), Sex=2, age 30mo -- within CDC's published 0-36mo range, so the default CDC selection (age>=24mo) correctly uses this infant-scoped file since it's the only CDC HC table (see references/DATA_SOURCES.md).",
       "record": {"patient_id": "b5", "sex": "female", "birth_date": "2020-01-01", "observation_date": "2020-01-01", "metric": "head_circumference", "value": 48.0, "unit": "cm", "age_months": 30},
