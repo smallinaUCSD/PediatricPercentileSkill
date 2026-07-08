@@ -178,3 +178,22 @@ def test_curve_points_uses_growth_select_table_not_a_reimplementation():
     spec = growth._select_table("CDC", "weight_for_age", chart._CDC_PROBE_AGE_MONTHS)
     assert rows is not None
     assert spec.filename == "cdc_wtage.csv"
+
+
+def test_panel_with_two_curve_segments_only_labels_the_rightmost_one():
+    """Regression test: a panel with both a WHO and a CDC curve segment
+    (e.g. weight_for_age for a patient whose record crosses 24 months)
+    used to print end-of-line percentile labels for BOTH segments, so a
+    confusing second set of numbers appeared mid-chart at the WHO
+    segment's endpoint (24mo) instead of only once at the chart's true
+    right edge."""
+    who_rows = chart._curve_points("WHO", "weight_for_age", "male", age_max_months=100)
+    cdc_rows = chart._curve_points("CDC", "weight_for_age", "male", age_max_months=100)
+    points = [
+        {"age_months": 10.0, "value": 8.0, "percentile": 50.0, "reference": "WHO", "flags": []},
+        {"age_months": 30.0, "value": 13.0, "percentile": 40.0, "reference": "CDC", "flags": []},
+    ]
+    svg = chart._build_panel_svg(
+        "Weight-for-age", "kg", [("weight_for_age:WHO", who_rows), ("weight_for_age:CDC", cdc_rows)], points
+    )
+    assert svg.count('class="pct-label"') == len(chart.PERCENTILE_LINES)

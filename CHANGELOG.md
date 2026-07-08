@@ -5,6 +5,20 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- `scripts/chart.py` printed a confusing second set of percentile
+  labels mid-chart whenever a panel had more than one curve segment
+  (e.g. weight-for-age for a patient whose record crosses 24 months
+  has a WHO segment ending at 24mo and a CDC segment continuing
+  further) -- every segment's endpoint got its own label instead of
+  only the chart's true right edge. Now only the rightmost segment is
+  labeled. Found by user inspection of the rendered chart, not caught
+  by the earlier visual verification pass.
+- Charts were too small to read comfortably; increased the SVG
+  dimensions, margins, font sizes, and display width. Regenerated
+  `assets/growth-chart-example.png` and `demo/warren_chart_example.png`
+  to reflect both fixes.
+
 ### Added
 - `evals/scorer.py`'s `json_block` scoring gained an optional
   `check_prose_consistency` flag: cross-checks any "Xth percentile"

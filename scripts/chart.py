@@ -70,8 +70,8 @@ UNCHARTED_INDICATORS = {"weight_for_length", "weight_for_stature"}
 _WHO_PROBE_AGE_MONTHS = 0.0
 _CDC_PROBE_AGE_MONTHS = growth.WHO_CDC_HANDOFF_MONTHS
 
-SVG_WIDTH, SVG_HEIGHT = 720, 380
-MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM = 56, 16, 24, 40
+SVG_WIDTH, SVG_HEIGHT = 980, 520
+MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM = 64, 40, 28, 48
 PLOT_W = SVG_WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 PLOT_H = SVG_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
 
@@ -140,8 +140,20 @@ def _build_panel_svg(title: str, unit: str, curves: list[tuple[str, list]], pati
         f'<rect x="{MARGIN_LEFT}" y="{MARGIN_TOP}" width="{PLOT_W}" height="{PLOT_H}" fill="none" stroke="#ccc"/>',
     ]
 
-    # percentile curves, one polyline per percentile per (indicator, standard) pair present
-    for _label, rows in curves:
+    # percentile curves, one polyline per percentile per (indicator, standard) pair
+    # present. A panel can have more than one curve segment (e.g. a WHO segment
+    # ending at 24 months plus a CDC segment continuing further) -- only the
+    # segment that reaches furthest right gets end-of-line percentile labels,
+    # otherwise every segment's endpoint would get its own label and a WHO
+    # segment ending mid-chart would print a confusing second set of numbers
+    # that don't belong to the chart's right edge.
+    rightmost_idx = None
+    if curves:
+        rightmost_idx = max(
+            range(len(curves)),
+            key=lambda i: max((row[0] for row in curves[i][1]), default=-1),
+        )
+    for i, (_label, rows) in enumerate(curves):
         if not rows:
             continue
         for pct in PERCENTILE_LINES:
@@ -152,7 +164,7 @@ def _build_panel_svg(title: str, unit: str, curves: list[tuple[str, list]], pati
             width = 1.6 if pct == 50 else 0.8
             dash = "" if pct == 50 else ' stroke-dasharray="2,2"'
             svg_parts.append(f'<polyline points="{path}" fill="none" stroke="{stroke}" stroke-width="{width}"{dash}/>')
-            if pts:
+            if pts and i == rightmost_idx:
                 lx, ly = pts[-1]
                 svg_parts.append(
                     f'<text x="{x(lx) + 3:.1f}" y="{y(ly) + 3:.1f}" class="pct-label">{pct}</text>'
@@ -237,10 +249,10 @@ def render_patient_html(patient_id: str, results: list[dict]) -> str:
 body {{ font-family: system-ui, sans-serif; margin: 24px; color: #1a202c; }}
 h1 {{ font-size: 1.3rem; }}
 h3 {{ font-size: 1rem; margin-bottom: 4px; }}
-.panel {{ display: inline-block; margin: 12px; vertical-align: top; }}
-.chart {{ width: 480px; height: auto; }}
-.pct-label {{ font-size: 8px; fill: #718096; }}
-.axis-label {{ font-size: 10px; fill: #4a5568; }}
+.panel {{ display: inline-block; margin: 16px; vertical-align: top; }}
+.chart {{ width: 700px; height: auto; }}
+.pct-label {{ font-size: 11px; fill: #718096; }}
+.axis-label {{ font-size: 13px; fill: #4a5568; }}
 .empty {{ color: #a0aec0; font-style: italic; }}
 .limitation {{ color: #975a16; font-size: 0.85rem; }}
 .disclaimer {{ color: #718096; font-size: 0.8rem; max-width: 720px; }}
