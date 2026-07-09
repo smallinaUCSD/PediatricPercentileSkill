@@ -17,23 +17,44 @@ library (Python 3.11+) — no install step, no virtual environment, no
 network access. Whatever `python3` is already on the machine running you
 is enough; there is nothing to download or set up first.
 
-## 1. Identify the input and pick an adapter
+## 1. Get the data into canonical shape
+
+The end user should never have to reshape their own data, write code, or
+run a command themselves. You do the conversion; they just hand you a file
+or describe the patient.
+
+**Known formats, use the adapter directly:**
 
 | Input looks like | Adapter | Command |
 |---|---|---|
 | A FHIR R4 `Bundle` JSON file (one `Patient` + `Observation` resources) | `adapters/fhir_r4.py` | `python3 adapters/fhir_r4.py bundle.json > records.json` |
 | Synthea's flat CSV export (`patients.csv` + `observations.csv`) | `adapters/synthea.py` | `python3 adapters/synthea.py patients.csv observations.csv [patient_id] > records.json` |
-| A plain table/spreadsheet, or data you already have in hand | `adapters/flat.py` | `python3 adapters/flat.py measurements.csv > records.json` (or `.json`) |
+| A spreadsheet/CSV already using the canonical column names below | `adapters/flat.py` | `python3 adapters/flat.py measurements.csv > records.json` (or `.json`) |
 
-If the user hands you raw values in conversation (e.g. "my son is 14 months
-old, born 2024-11-02, weighs 9.8kg and is 76cm") rather than a file, skip
-the adapter: write a small JSON file yourself matching the flat schema
-below and feed it straight to `scripts/growth.py`. Don't guess a
-patient's sex, birth date, or measurement date — ask if any are missing;
-these are required fields and the engine cannot proceed without them.
+**Everything else, interpret it yourself.** A spreadsheet with different
+column names, mixed units, a pasted table, a PDF-extracted table, or raw
+values typed into the conversation (e.g. "my son is 14 months old, born
+2024-11-02, weighs 9.8kg and is 76cm") all end up the same way: you read
+whatever you were given and construct canonical records matching the
+schema below, converting weight/height/length to `kg`/`cm` and computing
+age in months if only dates are given. If the mismatch is just column
+names on an otherwise well-shaped spreadsheet, `adapters/flat.py --map
+colmap.json` (see `CONTRIBUTING.md`) can do the rename for you; for
+anything less regular, write the canonical JSON yourself and feed it
+straight to `scripts/growth.py`.
+
+**Sex/gender column:** the header might be `sex` or `gender`; values
+might be `male`/`female`, `M`/`F`, or an explicit unknown marker
+(`U`, `unknown`, blank). Map recognizable values to the canonical
+`"male"`/`"female"` yourself, don't require an exact match. If sex is
+genuinely missing or unresolvable for a record, ask the user rather than
+guessing; a wrong guess silently selects the wrong sex-specific reference
+table, and don't invent a value just because there's an "unknown" option.
+Birth date and measurement date are the same: don't guess, ask if
+missing, since the engine cannot proceed without them.
 
 If you're unsure which adapter applies, ask the user rather than guessing
-the format — a FHIR bundle and a Synthea CSV pair look nothing alike, but
+the format; a FHIR bundle and a Synthea CSV pair look nothing alike, but
 a generic "spreadsheet of measurements" could plausibly be reshaped into
 the flat schema either way.
 

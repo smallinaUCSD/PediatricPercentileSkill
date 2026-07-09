@@ -5,6 +5,50 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed (README/skill overhaul, per supervisor review)
+- **Renamed the GitHub repo** `PediatricPercentileSkill` -> `growth-percentile-skill`,
+  matching the name already used in `pyproject.toml`, `marketplace.json`,
+  and `CITATION.cff` (that was the one inconsistent piece; nothing else
+  needed a new name invented). Updated every hardcoded old-repo-name URL
+  in `README.md`, `CITATION.cff`, and `.claude-plugin/plugin.json`.
+  GitHub's redirect keeps the old URL working. Historical `CHANGELOG.md`
+  entries referencing the old name are left as-is.
+- **Split README by audience.** README is now end-user only: install,
+  a first prompt, a "What it can do" section with a realistic example
+  prompt and results table, and a plain-language "bring your own data"
+  section, no terminal commands beyond the one-line agent-install step,
+  since the reader may not be able to program. New
+  `TRUST_AND_LIMITATIONS.md` holds the scope/limitations and
+  test-verification detail that used to live in README, for contributors
+  and clinicians. Adapter code links, the `flat.py --map` CLI/JSON
+  example, and the eval-suite command moved to `CONTRIBUTING.md`, which
+  is where a contributor would actually use them.
+- **Condensed the Install section** to one table, one agent per row, each
+  either its official install command or "clone the repo" with no
+  per-agent hedging paragraphs. Reframed as "any agent, not just coding
+  ones." Claude Code is no longer called out as a distinct "recommended"
+  path, same table row as everything else. Removed em dashes from
+  README's prose throughout.
+- **`SKILL.md` §1 rewritten** to formalize messy-data handling: known
+  formats (FHIR, Synthea CSV, exact flat-schema) still go through their
+  adapter; anything else (renamed columns, mixed units, a pasted table)
+  the agent now has explicit instructions to interpret and convert to
+  the canonical schema itself, rather than requiring the end user to
+  reshape data or run a command. Added explicit guidance for
+  `sex`/`gender` columns using varied headers/values (`M`/`F`,
+  `male`/`female`, an unknown marker), map what's recognizable, ask
+  rather than guess when genuinely unresolvable, since a wrong sex
+  guess silently selects the wrong reference table.
+- **`scripts/chart.py` restyled** to read closer to a printed CDC growth
+  chart: panel titles are now bold, centered, and uppercase; both axes
+  gained gridlines and tick labels (age in months, value in the
+  indicator's own unit) instead of a bare axis label with no numbers;
+  and the 50th-percentile line is no longer specially highlighted in
+  blue, every percentile curve (3rd-97th) now shares the same neutral
+  gray so the patient's own red trajectory is the chart's one accent
+  color. `assets/growth-chart-example.png` and
+  `demo/warren_chart_example.png` regenerated to match.
+
 ### Changed
 - **Dropped the `scipy` dependency.** `scripts/growth.py` used
   `scipy.stats.norm.cdf`/`.ppf` in exactly two places (z-score <-> percentile

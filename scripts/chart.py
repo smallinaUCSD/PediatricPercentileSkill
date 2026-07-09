@@ -44,6 +44,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -74,6 +75,33 @@ SVG_WIDTH, SVG_HEIGHT = 980, 520
 MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM = 64, 40, 28, 48
 PLOT_W = SVG_WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 PLOT_H = SVG_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
+
+
+def _nice_step(raw_step: float) -> float:
+    """Round a raw tick spacing up to a "nice" 1/2/5 * 10^n value."""
+    if raw_step <= 0:
+        return 1.0
+    magnitude = 10 ** math.floor(math.log10(raw_step))
+    for m in (1, 2, 5, 10):
+        step = m * magnitude
+        if step >= raw_step - 1e-9:
+            return step
+    return 10 * magnitude
+
+
+def _tick_values(lo: float, hi: float, target_count: int = 6) -> list[float]:
+    """Evenly-spaced, human-readable tick values covering [lo, hi], gridline-style
+    (like the printed CDC charts' month/value axes), not just a bare axis label."""
+    if hi <= lo:
+        return [lo]
+    step = _nice_step((hi - lo) / target_count)
+    start = math.ceil(lo / step) * step
+    ticks = []
+    v = start
+    while v <= hi + step * 1e-9:
+        ticks.append(round(v, 6))
+        v += step
+    return ticks or [lo, hi]
 
 
 def _curve_points(standard: str, indicator: str, sex: str, age_max_months: float) -> list[tuple[float, float]] | None:
@@ -140,6 +168,26 @@ def _build_panel_svg(title: str, unit: str, curves: list[tuple[str, list]], pati
         f'<rect x="{MARGIN_LEFT}" y="{MARGIN_TOP}" width="{PLOT_W}" height="{PLOT_H}" fill="none" stroke="#ccc"/>',
     ]
 
+    # gridlines + tick labels, like the printed CDC charts' month/value axes,
+    # so the reader has an actual scale to read values off of, not just an
+    # axis label with no numbers.
+    for t in _tick_values(age_min, age_max):
+        tx = x(t)
+        svg_parts.append(
+            f'<line x1="{tx:.1f}" y1="{MARGIN_TOP}" x2="{tx:.1f}" y2="{MARGIN_TOP + PLOT_H}" stroke="#edf2f7"/>'
+        )
+        svg_parts.append(
+            f'<text x="{tx:.1f}" y="{MARGIN_TOP + PLOT_H + 16}" class="tick-label" text-anchor="middle">{t:g}</text>'
+        )
+    for t in _tick_values(val_min, val_max):
+        ty = y(t)
+        svg_parts.append(
+            f'<line x1="{MARGIN_LEFT}" y1="{ty:.1f}" x2="{MARGIN_LEFT + PLOT_W}" y2="{ty:.1f}" stroke="#edf2f7"/>'
+        )
+        svg_parts.append(
+            f'<text x="{MARGIN_LEFT - 6:.1f}" y="{ty + 3:.1f}" class="tick-label" text-anchor="end">{t:g}</text>'
+        )
+
     # percentile curves, one polyline per percentile per (indicator, standard) pair
     # present. A panel can have more than one curve segment (e.g. a WHO segment
     # ending at 24 months plus a CDC segment continuing further) -- only the
@@ -160,10 +208,10 @@ def _build_panel_svg(title: str, unit: str, curves: list[tuple[str, list]], pati
             z = _Z_BY_PERCENTILE[pct]
             pts = [(row[0], growth.lms_value_at_z(z, row[1], row[2], row[3])) for row in rows]
             path = " ".join(f"{x(a):.1f},{y(v):.1f}" for a, v in pts)
-            stroke = "#2b6cb0" if pct == 50 else "#a0aec0"
-            width = 1.6 if pct == 50 else 0.8
-            dash = "" if pct == 50 else ' stroke-dasharray="2,2"'
-            svg_parts.append(f'<polyline points="{path}" fill="none" stroke="{stroke}" stroke-width="{width}"{dash}/>')
+            # All percentile curves share the same neutral styling (matching
+            # the printed CDC charts, where no single line is highlighted) --
+            # the patient's own trajectory below is the chart's one accent color.
+            svg_parts.append(f'<polyline points="{path}" fill="none" stroke="#718096" stroke-width="1"/>')
             if pts and i == rightmost_idx:
                 lx, ly = pts[-1]
                 svg_parts.append(
@@ -248,11 +296,15 @@ def render_patient_html(patient_id: str, results: list[dict]) -> str:
 <style>
 body {{ font-family: system-ui, sans-serif; margin: 24px; color: #1a202c; }}
 h1 {{ font-size: 1.3rem; }}
-h3 {{ font-size: 1rem; margin-bottom: 4px; }}
+h3 {{
+  font-size: 1rem; margin-bottom: 4px; text-align: center;
+  text-transform: uppercase; font-weight: 700; letter-spacing: 0.03em;
+}}
 .panel {{ display: inline-block; margin: 16px; vertical-align: top; }}
 .chart {{ width: 700px; height: auto; }}
 .pct-label {{ font-size: 11px; fill: #718096; }}
 .axis-label {{ font-size: 13px; fill: #4a5568; }}
+.tick-label {{ font-size: 10px; fill: #718096; }}
 .empty {{ color: #a0aec0; font-style: italic; }}
 .limitation {{ color: #975a16; font-size: 0.85rem; }}
 .disclaimer {{ color: #718096; font-size: 0.8rem; max-width: 720px; }}
@@ -266,9 +318,8 @@ h3 {{ font-size: 1rem; margin-bottom: 4px; }}
 <body>
 <h1>Growth chart -- patient {safe_patient_id}</h1>
 <p class="disclaimer">Orientation aid only, not a clinical-grade chart image or a
-diagnostic tool. Blue dashed lines are standard percentile curves (3rd-97th,
-median in solid blue); red is this patient's own trajectory. Hover a red
-point for exact values.</p>
+diagnostic tool. Gray lines are standard percentile curves (3rd-97th); red is
+this patient's own trajectory. Hover a red point for exact values.</p>
 {"".join(panels_html) or '<p class="empty">No age-based indicators found in this file.</p>'}
 {limitations_note}
 <div id="tooltip"></div>

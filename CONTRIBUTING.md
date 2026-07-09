@@ -33,6 +33,22 @@ python3 adapters/synthea.py tests/fixtures/synthea_patients.csv tests/fixtures/s
 python3 scripts/growth.py /tmp/records.json
 ```
 
+If a spreadsheet uses different column names than the canonical schema
+(e.g. `DOB` instead of `birth_date`, `Weight (kg)` instead of `value`),
+`adapters/flat.py` takes an optional column map instead of requiring the
+file to be renamed first:
+
+```bash
+python3 adapters/flat.py measurements.csv --map colmap.json
+```
+
+where `colmap.json` maps canonical field name -> your column name, for
+just the columns that differ:
+
+```json
+{"birth_date": "DOB", "value": "Weight (kg)"}
+```
+
 Re-running the agent-behavioral eval suite:
 
 ```bash
@@ -102,6 +118,13 @@ keeps ingestion and calculation chainable purely through JSON, the same
 way an agent invokes them (adapter CLI output piped into `growth.py`'s
 CLI input), and keeps the engine's test surface
 ([`tests/golden/`](tests/golden/)) independent of adapter code.
+
+If your data is in a format none of the existing adapters handle (a
+different EHR export, a lab system's proprietary shape, etc.), open an
+issue or PR describing it — a sample file (with any real patient data
+scrubbed) is the fastest way to get a new adapter added. In the meantime,
+an agent following `SKILL.md` can usually still get you a result by
+reading the file directly and constructing canonical records itself.
 
 ## Adding an eval scenario
 
