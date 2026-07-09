@@ -56,8 +56,8 @@ change something a user would act on differently.
 
 ## Versioning
 
-Semantic versioning. Since this is pre-1.0: breaking changes to the
-canonical schema, `GrowthResult` shape, or `SKILL.md`'s documented
-behavior bump the minor version; everything else (new adapter, new
-indicator, bug fix, doc change requiring a version bump at all) bumps the
-patch version.
+Semantic versioning. Breaking changes to the canonical schema,
+`GrowthResult` shape, or `SKILL.md`'s documented behavior bump the major
+version; new adapters, new indicators, and other backward-compatible
+additions bump the minor version; bug fixes and doc changes requiring a
+version bump at all bump the patch version.

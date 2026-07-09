@@ -26,7 +26,7 @@ wheels = [
 
 [[package]]
 name = "growth-percentile-skill"
-version = "0.2.0"
+version = "1.0.0"
 source = { editable = "." }
 
 [package.dev-dependencies]

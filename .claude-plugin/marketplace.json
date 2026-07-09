@@ -10,7 +10,7 @@
       "name": "growth-percentile",
       "source": "./",
       "description": "Computes pediatric growth percentiles and z-scores against CDC and WHO growth standards from FHIR, Synthea, or flat-file patient data.",
-      "version": "0.2.0",
+      "version": "1.0.0",
       "license": "MIT",
       "keywords": [
         "pediatrics",

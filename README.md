@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/smallinaUCSD/growth-percentile-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/smallinaUCSD/growth-percentile-skill/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![v0.2.0](https://img.shields.io/badge/version-0.2.0-informational.svg)](CHANGELOG.md)
+[![v1.0.0](https://img.shields.io/badge/version-1.0.0-informational.svg)](CHANGELOG.md)
 
 An open-source **Agent Skill** that computes pediatric growth percentiles
 and z-scores from patient measurements, against the CDC and WHO growth
@@ -64,7 +64,8 @@ It handles:
 - **Data-quality flags**: likely data-entry errors, missing reference
   charts for a given age/metric, prematurity considerations, derived BMI
 - **Interactive growth charts**, one per patient, opened in any browser,
-  no server or account needed
+  no server or account needed (visual styling is actively being improved;
+  the underlying data is already audited)
 
 See [demo/warren_synthea.md](demo/warren_synthea.md) for a full
 walkthrough on a complete patient record, including the WHO to CDC

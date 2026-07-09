@@ -3,7 +3,16 @@
 All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [1.0.0] - 2026-07-09
+
+First public release.
+
+### Known limitation
+- The chart output (`scripts/chart.py`) is functionally complete and its
+  underlying numbers are fully audited (same engine, same provenance as
+  every other result), but its visual styling is still a work in
+  progress. Expect continued polish in upcoming releases; this does not
+  affect the correctness of any percentile or z-score.
 
 ### Changed (README/skill overhaul, per supervisor review)
 - **Renamed the GitHub repo** `PediatricPercentileSkill` -> `growth-percentile-skill`,
