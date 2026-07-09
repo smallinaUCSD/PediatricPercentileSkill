@@ -7,9 +7,7 @@
 An open-source **Agent Skill** that computes pediatric growth percentiles
 and z-scores from patient measurements, against the CDC and WHO growth
 standards, using a frozen, tested, deterministic engine, not model
-arithmetic. As far as we've been able to find, it's the first agent-native
-(SKILL.md-based) tool for this; everything else in this space is a
-library you'd import and write code against.
+arithmetic. 
 
 > Hand any agent a patient's measurements, in a FHIR bundle, a
 > spreadsheet, or just typed into the chat, and it returns auditable
