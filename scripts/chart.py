@@ -51,7 +51,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import growth  # noqa: E402
 
 PERCENTILE_LINES = [3, 5, 10, 25, 50, 75, 90, 95, 97]
-_Z_BY_PERCENTILE = {p: growth.norm.ppf(p / 100) for p in PERCENTILE_LINES}
+_Z_BY_PERCENTILE = {p: growth._norm_ppf(p / 100) for p in PERCENTILE_LINES}
 
 # panel_key -> (title, y-axis unit, [indicator names that feed this panel])
 PANELS = {

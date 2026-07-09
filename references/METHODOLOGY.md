@@ -13,7 +13,7 @@ sex, indicator, and age or length/height):
 ```
 z = ((X / M)^L - 1) / (L * S)      for L != 0
 z = ln(X / M) / S                   for L == 0
-percentile = Phi(z) * 100           (standard normal CDF, via scipy.stats.norm.cdf)
+percentile = Phi(z) * 100           (standard normal CDF, via math.erf -- see growth._norm_cdf)
 ```
 
 This is the same transform used to generate the published CDC and WHO
@@ -73,7 +73,7 @@ For a BMI value `X`, sex, and age with parameters `L, M, S` (ordinary) and
 ```
 X < P95:  z = ((X/M)^L - 1) / (L*S)                       # ordinary LMS
 X >= P95: p = 0.95 + 0.05 * erf((X - P95) / (sigma*sqrt(2)))
-          z = Phi^-1(p)                                    # scipy.stats.norm.ppf
+          z = Phi^-1(p)                                    # growth._norm_ppf (pure stdlib)
 percentile = z-derived p * 100 in both branches
 ```
 

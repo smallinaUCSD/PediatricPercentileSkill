@@ -11,12 +11,14 @@ uv run pytest
 
 Most people should just ask an agent (see the main [README](README.md)).
 This is for development, debugging, or anyone who prefers a terminal.
+`scripts/` and `adapters/` are pure standard library, so a plain `python3`
+runs them directly — no `uv sync` needed for this part.
 
 A hand-written record:
 
 ```bash
 echo '[{"patient_id":"demo","sex":"male","birth_date":"2020-01-01","observation_date":"2020-10-15","metric":"weight","value":9.7,"unit":"kg"}]' > /tmp/records.json
-uv run scripts/growth.py /tmp/records.json
+python3 scripts/growth.py /tmp/records.json
 ```
 
 Through an adapter, with a Synthea-generated (synthetic, not real patient
@@ -24,11 +26,11 @@ data) test patient (see
 [`tests/fixtures/README.md`](tests/fixtures/README.md) for provenance):
 
 ```bash
-uv run adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > /tmp/records.json
-uv run scripts/growth.py /tmp/records.json
+python3 adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > /tmp/records.json
+python3 scripts/growth.py /tmp/records.json
 
-uv run adapters/synthea.py tests/fixtures/synthea_patients.csv tests/fixtures/synthea_observations.csv > /tmp/records.json
-uv run scripts/growth.py /tmp/records.json
+python3 adapters/synthea.py tests/fixtures/synthea_patients.csv tests/fixtures/synthea_observations.csv > /tmp/records.json
+python3 scripts/growth.py /tmp/records.json
 ```
 
 Re-running the agent-behavioral eval suite:

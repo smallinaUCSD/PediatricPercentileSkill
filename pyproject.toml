@@ -5,9 +5,7 @@ description = "Agent Skill for computing pediatric growth percentiles and z-scor
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
-dependencies = [
-    "scipy>=1.11",
-]
+dependencies = []
 
 [dependency-groups]
 dev = [

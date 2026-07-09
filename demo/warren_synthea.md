@@ -40,7 +40,7 @@ adapter's LOINC filtering rather than a pre-curated list:
 ## Step 1 — ingest
 
 ```bash
-uv run adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > records.json
+python3 adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > records.json
 ```
 
 The adapter walks all 82 entries, keeps only the `Observation`s carrying a
@@ -64,7 +64,7 @@ months), 2 BMI (only present in the source data for the last two visits).
 ## Step 2 — compute
 
 ```bash
-uv run scripts/growth.py records.json > results.json
+python3 scripts/growth.py records.json > results.json
 ```
 
 The engine groups records into visits, computes every applicable
@@ -124,7 +124,7 @@ guidance on presenting flags rather than burying them:
 ## Step 4 — visualize (optional)
 
 ```bash
-uv run scripts/chart.py results.json --out-dir charts/
+python3 scripts/chart.py results.json --out-dir charts/
 ```
 
 This produces one self-contained HTML file for the patient — percentile
@@ -173,10 +173,9 @@ adapter expects.
 
 ```bash
 cd growth-percentile-skill  # this repo
-uv sync
-uv run adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > /tmp/records.json
-uv run scripts/growth.py /tmp/records.json > /tmp/results.json
+python3 adapters/fhir_r4.py tests/fixtures/synthea_fhir_bundle.json > /tmp/records.json
+python3 scripts/growth.py /tmp/records.json > /tmp/results.json
 cat /tmp/results.json
-uv run scripts/chart.py /tmp/results.json --out-dir /tmp/charts
+python3 scripts/chart.py /tmp/results.json --out-dir /tmp/charts
 open /tmp/charts/chart_*.html  # macOS; use xdg-open on Linux
 ```

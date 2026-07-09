@@ -8,12 +8,15 @@ implemented here are cited and, where possible, verified against the
 source data file itself (see METHODOLOGY.md §4 for the extended-BMI
 verification).
 
+Pure standard library, no third-party dependencies (see METHODOLOGY.md §1
+for why) -- runs with a bare `python3`, no `uv sync`/`pip install` step.
+
 Usage as a library:
     from growth import MeasurementRecord, compute_batch
     results = compute_batch([MeasurementRecord(...), ...])
 
 Usage as a CLI:
-    uv run scripts/growth.py records.json
+    python3 scripts/growth.py records.json
     (reads a JSON list of MeasurementRecord objects, prints a JSON list
     of GrowthResult objects)
 """
@@ -30,8 +33,6 @@ import sys
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-
-from scipy.stats import norm
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "references" / "data"
 
@@ -235,8 +236,65 @@ def lms_value_at_z(z: float, L: float, M: float, S: float) -> float:
     return M * (1 + L * S * z) ** (1 / L)
 
 
+def _norm_cdf(z: float) -> float:
+    """Standard normal CDF, exact via math.erf (no third-party dependency)."""
+    return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+
+
+# Acklam's rational approximation for the inverse standard normal CDF
+# (probit function), refined by one Halley step to full double precision.
+# Public-domain algorithm: https://web.archive.org/web/20151030215612/http://home.online.no/~pjacklam/notes/invnorm/
+_PPF_A = (
+    -3.969683028665376e01, 2.209460984245205e02, -2.759285104469687e02,
+    1.383577518672690e02, -3.066479806614716e01, 2.506628277459239e00,
+)
+_PPF_B = (
+    -5.447609879822406e01, 1.615858368580409e02, -1.556989798598866e02,
+    6.680131188771972e01, -1.328068155288572e01,
+)
+_PPF_C = (
+    -7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e00,
+    -2.549732539343734e00, 4.374664141464968e00, 2.938163982698783e00,
+)
+_PPF_D = (
+    7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e00,
+    3.754408661907416e00,
+)
+_PPF_P_LOW = 0.02425
+
+
+def _norm_ppf(p: float) -> float:
+    """Inverse standard normal CDF (probit function), pure stdlib."""
+    if p <= 0.0 or p >= 1.0:
+        raise ValueError(f"_norm_ppf domain is (0, 1), got {p!r}")
+    if p < _PPF_P_LOW:
+        q = math.sqrt(-2.0 * math.log(p))
+        z = (((((_PPF_C[0] * q + _PPF_C[1]) * q + _PPF_C[2]) * q + _PPF_C[3]) * q + _PPF_C[4]) * q + _PPF_C[5]) / (
+            (((_PPF_D[0] * q + _PPF_D[1]) * q + _PPF_D[2]) * q + _PPF_D[3]) * q + 1.0
+        )
+    elif p <= 1.0 - _PPF_P_LOW:
+        q = p - 0.5
+        r = q * q
+        z = (((((_PPF_A[0] * r + _PPF_A[1]) * r + _PPF_A[2]) * r + _PPF_A[3]) * r + _PPF_A[4]) * r + _PPF_A[5]) * q / (
+            (((((_PPF_B[0] * r + _PPF_B[1]) * r + _PPF_B[2]) * r + _PPF_B[3]) * r + _PPF_B[4]) * r + 1.0)
+        )
+    else:
+        q = math.sqrt(-2.0 * math.log(1.0 - p))
+        z = -(((((_PPF_C[0] * q + _PPF_C[1]) * q + _PPF_C[2]) * q + _PPF_C[3]) * q + _PPF_C[4]) * q + _PPF_C[5]) / (
+            (((_PPF_D[0] * q + _PPF_D[1]) * q + _PPF_D[2]) * q + _PPF_D[3]) * q + 1.0
+        )
+
+    # Halley refinement step against the exact CDF (math.erfc) to push the
+    # ~1.15e-9 relative error of the rational approximation above down to
+    # full double precision.
+    e = 0.5 * math.erfc(-z / math.sqrt(2.0)) - p
+    u = e * math.sqrt(2.0 * math.pi) * math.exp(z * z / 2.0)
+    z = z - u / (1.0 + z * u / 2.0)
+    return z
+
+
 def percentile_from_z(z: float) -> float:
-    return float(norm.cdf(z) * 100)
+    return float(_norm_cdf(z) * 100)
 
 
 def extended_bmi_z_percentile(
@@ -249,7 +307,7 @@ def extended_bmi_z_percentile(
     arg = (x - p95) / (sigma * math.sqrt(2))
     p = 0.95 + 0.05 * math.erf(arg)
     p = min(p, 1 - 1e-12)
-    z = float(norm.ppf(p))
+    z = _norm_ppf(p)
     return z, p * 100, True
 
 

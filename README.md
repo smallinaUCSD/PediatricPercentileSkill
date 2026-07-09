@@ -82,9 +82,12 @@ if one doesn't.
 you're developing the skill itself, not using it. See
 [CONTRIBUTING.md](CONTRIBUTING.md) if that's you.
 
-Either way, the machine actually running the engine needs
-[`uv`](https://docs.astral.sh/uv/) installed — the plugin/skill install
-step doesn't bundle a Python environment.
+Either way, the engine itself (`scripts/growth.py`, `adapters/`) is pure
+Python standard library — no dependencies to install, no virtual
+environment, nothing to download. Whatever `python3` is already on the
+machine running your agent is enough. (`uv` is only needed if you're
+developing this skill itself — running its test suite — see
+[CONTRIBUTING.md](CONTRIBUTING.md).)
 
 ## Get your first result
 
@@ -134,7 +137,7 @@ of `birth_date`, `Weight (kg)` instead of `value`), you don't need to
 rename anything — pass a column map instead:
 
 ```bash
-uv run adapters/flat.py measurements.csv --map colmap.json
+python3 adapters/flat.py measurements.csv --map colmap.json
 ```
 
 where `colmap.json` maps canonical field name → your column name, for

@@ -5,6 +5,26 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **Dropped the `scipy` dependency.** `scripts/growth.py` used
+  `scipy.stats.norm.cdf`/`.ppf` in exactly two places (z-score <-> percentile
+  conversion). Replaced with pure-stdlib equivalents: `_norm_cdf` (exact,
+  via `math.erf`) and `_norm_ppf` (Acklam's rational approximation plus one
+  Halley refinement step, a well-known public-domain algorithm). Verified
+  against scipy directly (not just the golden-test tolerances) across
+  200k random points each: max CDF error 2.2e-16 (machine epsilon), max
+  PPF error 2.9e-12, including the extreme tails. `scripts/chart.py` also
+  referenced `growth.norm.ppf` directly; updated to `growth._norm_ppf`.
+  Motivation: per supervisor feedback, using this skill should require no
+  installed software at all -- with zero third-party dependencies, a bare
+  `python3` (no `uv sync`, no venv) is now enough to run the engine,
+  adapters, and chart generator. Updated `SKILL.md`, `README.md`,
+  `CONTRIBUTING.md`, `demo/warren_synthea.md`, and `assets/README.md` to
+  invoke `python3` directly instead of `uv run` for these (the `uv`-based
+  commands elsewhere -- `uv run pytest`, `uv run evals/run_eval.py` -- are
+  this repo's own dev/test tooling, unrelated to using the skill, and are
+  unchanged).
+
 ### Fixed
 - `scripts/chart.py` printed a confusing second set of percentile
   labels mid-chart whenever a panel had more than one curve segment

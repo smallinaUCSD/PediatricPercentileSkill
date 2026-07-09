@@ -12,15 +12,18 @@ engine. Your job is orchestration: get the data into the canonical shape,
 call the engine, then interpret and present what it returns.
 
 All commands below are run from this skill's own directory (`cd` into it
-first if your shell is elsewhere). First time only: `uv sync`.
+first if your shell is elsewhere). Everything here is pure Python standard
+library (Python 3.11+) — no install step, no virtual environment, no
+network access. Whatever `python3` is already on the machine running you
+is enough; there is nothing to download or set up first.
 
 ## 1. Identify the input and pick an adapter
 
 | Input looks like | Adapter | Command |
 |---|---|---|
-| A FHIR R4 `Bundle` JSON file (one `Patient` + `Observation` resources) | `adapters/fhir_r4.py` | `uv run adapters/fhir_r4.py bundle.json > records.json` |
-| Synthea's flat CSV export (`patients.csv` + `observations.csv`) | `adapters/synthea.py` | `uv run adapters/synthea.py patients.csv observations.csv [patient_id] > records.json` |
-| A plain table/spreadsheet, or data you already have in hand | `adapters/flat.py` | `uv run adapters/flat.py measurements.csv > records.json` (or `.json`) |
+| A FHIR R4 `Bundle` JSON file (one `Patient` + `Observation` resources) | `adapters/fhir_r4.py` | `python3 adapters/fhir_r4.py bundle.json > records.json` |
+| Synthea's flat CSV export (`patients.csv` + `observations.csv`) | `adapters/synthea.py` | `python3 adapters/synthea.py patients.csv observations.csv [patient_id] > records.json` |
+| A plain table/spreadsheet, or data you already have in hand | `adapters/flat.py` | `python3 adapters/flat.py measurements.csv > records.json` (or `.json`) |
 
 If the user hands you raw values in conversation (e.g. "my son is 14 months
 old, born 2024-11-02, weighs 9.8kg and is 76cm") rather than a file, skip
@@ -52,7 +55,7 @@ how the FHIR/Synthea adapters resolve this from LOINC code `8302-2`.
 ## 2. Run the engine
 
 ```bash
-uv run scripts/growth.py records.json
+python3 scripts/growth.py records.json
 ```
 
 This prints a JSON list of `GrowthResult` objects, one per indicator per
@@ -69,7 +72,7 @@ If the user wants a chart, or a patient has several visits and a visual
 would help, run:
 
 ```bash
-uv run scripts/chart.py records_output.json --out-dir charts/
+python3 scripts/chart.py records_output.json --out-dir charts/
 ```
 
 This produces one self-contained, interactive HTML file per patient
