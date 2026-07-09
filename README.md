@@ -32,10 +32,9 @@ Ask your agent, in plain English:
 > Using the growth-percentile skill, what percentile is a 9-month-old
 > boy at 9.7 kg?
 
-No terminal, no code to write. The agent reads `SKILL.md`, runs the
-numbers through the deterministic engine, and replies with a percentile,
-a z-score, which reference standard it used, and any data-quality flags,
-never a number it computed itself.
+The agent reads `SKILL.md`, runs the numbers through the deterministic engine, 
+and replies with a percentile,a z-score, which reference standard it used, 
+and any data-quality flags.
 
 ## What it can also do
 
