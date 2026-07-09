@@ -53,7 +53,8 @@ $ uv run evals/run_eval.py --all
 
 ### s1 — FHIR bundle happy path
 
-Given the real Synthea FHIR bundle used in `demo/warren_synthea.md`, the
+Given the Synthea-generated (synthetic) FHIR bundle used in
+`demo/warren_synthea.md`, the
 agent correctly: ran `adapters/fhir_r4.py`, ran `scripts/growth.py`,
 reported WHO for the birth visit and CDC for the 29-month visit (crossing
 the reference boundary mid-patient), surfaced the `bmi_derived` flag, and
@@ -80,8 +81,9 @@ or checks like this one will flag the curation instead of the agent.
 
 ### s2 — Synthea CSV export, WHO/CDC boundary mid-record
 
-Same result quality on the CSV-adapter path, on a different real Synthea
-patient whose 12 visits span birth to 35 months. Notably, this run also
+Same result quality on the CSV-adapter path, on a different
+Synthea-generated (synthetic) patient whose 12 visits span birth to 35
+months. Notably, this run also
 surfaced a **methodology lesson about running evals in parallel**: the
 agent's response includes an unprompted note that it encountered and
 correctly disregarded an anomalous file in shared `/tmp` scratch space (a

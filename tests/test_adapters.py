@@ -19,11 +19,12 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 # --------------------------------------------------------------------------
-# fhir_r4 adapter -- against a real Synthea FHIR R4 bundle (see fixtures/README.md)
+# fhir_r4 adapter -- against a genuine Synthea-generated FHIR R4 bundle
+# (synthetic patient, see fixtures/README.md)
 # --------------------------------------------------------------------------
 
 
-def test_fhir_r4_parses_real_synthea_bundle():
+def test_fhir_r4_parses_genuine_synthea_bundle():
     with open(FIXTURES / "synthea_fhir_bundle.json") as f:
         bundle = json.load(f)
     records = fhir_r4.parse_bundle(bundle)
@@ -103,11 +104,12 @@ def test_fhir_r4_skips_observations_without_valuequantity():
 
 
 # --------------------------------------------------------------------------
-# synthea CSV adapter -- against a real Synthea CSV export (see fixtures/README.md)
+# synthea CSV adapter -- against a genuine Synthea-generated CSV export
+# (synthetic patient, see fixtures/README.md)
 # --------------------------------------------------------------------------
 
 
-def test_synthea_csv_parses_real_export():
+def test_synthea_csv_parses_genuine_export():
     records = synthea.parse_csv(
         str(FIXTURES / "synthea_patients.csv"), str(FIXTURES / "synthea_observations.csv")
     )

@@ -19,7 +19,8 @@ echo '[{"patient_id":"demo","sex":"male","birth_date":"2020-01-01","observation_
 uv run scripts/growth.py /tmp/records.json
 ```
 
-Through an adapter, with a real Synthea-generated patient (see
+Through an adapter, with a Synthea-generated (synthetic, not real patient
+data) test patient (see
 [`tests/fixtures/README.md`](tests/fixtures/README.md) for provenance):
 
 ```bash

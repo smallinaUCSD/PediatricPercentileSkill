@@ -1,17 +1,18 @@
 # Demo: end-to-end growth percentiles from a raw Synthea FHIR bundle
 
 This walks through the full pipeline — raw FHIR bundle in, audited growth
-percentiles out — on a single real patient, exactly as an agent following
-`SKILL.md` would run it.
+percentiles out — on a single Synthea-generated (synthetic) patient,
+exactly as an agent following `SKILL.md` would run it.
 
 ## About this patient
 
 The original project plan named this demo after a specific "Warren"
 Synthea patient from an earlier meeting's notes, which weren't available
 during implementation. Rather than fabricate a patient matching that
-description, this demo uses a real Synthea-generated patient we already
-verified end-to-end while building the adapters (`tests/fixtures/synthea_fhir_bundle.json`
-— see `tests/fixtures/README.md` for exact provenance). The filename is
+description, this demo uses a Synthea-generated (synthetic, not a real
+person) patient we already verified end-to-end while building the adapters
+(`tests/fixtures/synthea_fhir_bundle.json` — see
+`tests/fixtures/README.md` for exact provenance). The filename is
 kept for continuity with the project plan. She's a good demo patient on
 her own merits: her record runs from birth to just under three years old,
 so it exercises the WHO→CDC handoff, the length-vs-stature switch, and

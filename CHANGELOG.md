@@ -18,6 +18,30 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   dimensions, margins, font sizes, and display width. Regenerated
   `assets/growth-chart-example.png` and `demo/warren_chart_example.png`
   to reflect both fixes.
+- Several docs described Synthea fixtures/demo patients as "real Synthea
+  patient" or "real Synthea-generated patient" -- Synthea is a synthetic
+  data generator and never produces real patient data, so "real" there
+  (meaning "genuine tool output, not hand-written") read as an outright
+  contradiction. Reworded throughout (`CONTRIBUTING.md`, `CHANGELOG.md`,
+  `EVALUATION.md`, `demo/warren_synthea.md`, `evals/scenarios/data/README.md`,
+  `tests/test_adapters.py`) to say "Synthea-generated (synthetic)" instead.
+  README's "Bring your own data" section also listed the Synthea adapter as
+  a third co-equal input shape alongside FHIR and flat CSV/JSON, which is
+  misleading since no real user's own data is a Synthea export -- it's a
+  synthetic-data generator, useful for testing/demos only. Moved it out of
+  the table into its own callout describing it that way. Caught by
+  supervisor review.
+
+### Added (multi-agent install instructions)
+- README's Install section previously only detailed Claude Code, with a
+  generic "point your agent at SKILL.md" fallback for everything else.
+  Added specific, researched installation paths for Codex (official
+  `$skill-installer`, per supervisor-provided instructions, plus manual
+  `~/.agents/skills/` placement), OpenCode, Grok Build, Hermes, and
+  OpenClaw -- each has its own official skill-discovery mechanism and
+  directory convention. Noted that only the Claude Code plugin path has
+  been verified end-to-end by us; the others follow each tool's own
+  documented behavior but are otherwise untested against this repo.
 
 ### Added
 - `evals/scorer.py`'s `json_block` scoring gained an optional
@@ -164,14 +188,15 @@ Regression tests added for all seven in `tests/test_chart.py`,
   resolving LOINC `8302-2` ("Body height") to `length_recumbent` vs.
   `height_standing`, needed because real-world exports (Synthea
   included) don't reliably use the recumbent-length-specific code.
-- `tests/fixtures/` — real Synthea-generated FHIR R4 and CSV patient data
-  (not hand-written) used to test the adapters; `tests/test_adapters.py`
-  (22 tests).
+- `tests/fixtures/` — Synthea-generated FHIR R4 and CSV patient data
+  (synthetic, not hand-written) used to test the adapters;
+  `tests/test_adapters.py` (22 tests).
 - `SKILL.md` — the agent-facing workflow: input detection, adapter
   selection, calling the engine, and how to interpret/present each flag.
 - `demo/warren_synthea.md` — end-to-end walkthrough (raw FHIR bundle ->
-  adapter -> engine -> presented summary) on a real Synthea patient whose
-  record crosses the WHO->CDC boundary and the length/stature switch.
+  adapter -> engine -> presented summary) on a Synthea-generated (synthetic)
+  patient whose record crosses the WHO->CDC boundary and the length/stature
+  switch.
 - `evals/` — agent-behavioral eval harness: `scorer.py` (deterministic,
   unit-tested in `tests/test_scorer.py`, 15 tests), `run_eval.py` CLI,
   five scenarios (`evals/scenarios/`) covering happy-path FHIR/Synthea

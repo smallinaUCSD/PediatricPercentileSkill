@@ -12,11 +12,10 @@ arithmetic. As far as we've been able to find, it's the first agent-native
 library you'd import and write code against.
 
 > Point any coding agent at this repo, hand it a patient's measurements
-> (FHIR bundle, Synthea export, or a plain table), and it returns
-> auditable growth percentiles with full provenance back to the source
-> data row.
+> (a FHIR bundle or a plain table), and it returns auditable growth
+> percentiles with full provenance back to the source data row.
 
-![Example growth chart: weight, length/height, BMI, and head-circumference-for-age percentile curves with a real patient's trajectory plotted on top](assets/growth-chart-example.png)
+![Example growth chart: weight, length/height, BMI, and head-circumference-for-age percentile curves with a patient's trajectory plotted on top](assets/growth-chart-example.png)
 
 *A real, unedited screenshot of [`scripts/chart.py`](scripts/chart.py)'s
 output — see [Visualize it](#visualize-it).*
@@ -33,20 +32,51 @@ output — see [Visualize it](#visualize-it).*
 /plugin install growth-percentile@growth-percentile-skill
 ```
 
-**Cursor, Codex, or any other coding agent that reads plain markdown:**
-[`SKILL.md`](SKILL.md) is a self-contained instruction file — no special
-packaging required. Point your agent at it directly, e.g.:
+Several other agents ship their own official Agent Skills installer.
+This repo's `SKILL.md` sits at the root next to the `scripts/`/`adapters/`
+it calls by relative path, so for all of these the skill unit to install
+is the **whole repo**, not just the `SKILL.md` file on its own:
 
-- Cursor: copy [`SKILL.md`](SKILL.md) into `.cursor/rules/growth-percentile.md`
-  in your project (or reference its path directly in a prompt).
-- Codex / any agent that accepts a system prompt or a "read this file
-  first" instruction: tell it to read [`SKILL.md`](SKILL.md) and follow it.
+- **Codex** — the built-in `$skill-installer`:
+  ```
+  $skill-installer install https://github.com/smallinaUCSD/PediatricPercentileSkill
+  ```
+  or clone manually into `~/.agents/skills/growth-percentile` (or
+  `.agents/skills/growth-percentile` in a specific project) and restart
+  Codex. [Official docs](https://developers.openai.com/codex/skills).
+- **OpenCode** — clone into `.opencode/skills/growth-percentile` (project)
+  or `~/.config/opencode/skills/growth-percentile` (global). OpenCode also
+  scans `.claude/skills/` and `.agents/skills/`, so an install done for
+  Claude Code or Codex may already be picked up.
+  [Official docs](https://opencode.ai/docs/skills/).
+- **Grok Build** — clone into `.grok/skills/growth-percentile` (project) or
+  `~/.grok/skills/growth-percentile` (global). Grok Build also automatically
+  reads Claude Code plugins/skills with no extra setup, so the Claude Code
+  install above may already be enough.
+  [Official docs](https://docs.x.ai/build/features/skills-plugins-marketplaces).
+- **Hermes** — `hermes skills install smallinaUCSD/PediatricPercentileSkill`
+  (or the `/skills install ...` slash command in a chat), or clone manually
+  into `~/.hermes/skills/growth-percentile`.
+  [Official docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills).
+- **OpenClaw** — `openclaw skills install git:smallinaUCSD/PediatricPercentileSkill`
+  (add `--global` to install into `~/.openclaw/skills` instead of the
+  workspace-local `skills/` directory).
+  [Official docs](https://docs.openclaw.ai/tools/skills).
+
+**Cursor, or any other coding agent that reads plain markdown:**
+[`SKILL.md`](SKILL.md) is a self-contained instruction file — no special
+packaging required beyond having the rest of the repo alongside it. For
+Cursor: copy this repo in and reference [`SKILL.md`](SKILL.md) as
+`.cursor/rules/growth-percentile.md` (or point to its path directly in a
+prompt).
 
 We've verified the Claude Code plugin path with a real install/uninstall
-cycle; the general markdown path is untested on other agents specifically
-but should work anywhere the agent can read a file and follow instructions
-in it — [let us know](https://github.com/smallinaUCSD/PediatricPercentileSkill/issues)
-if it doesn't.
+cycle. The agent-specific paths above follow each tool's own documented
+skill-discovery behavior but haven't been run end-to-end by us against
+*this* repo, and the general markdown fallback is untested on other agents
+specifically — both should work, but
+[let us know](https://github.com/smallinaUCSD/PediatricPercentileSkill/issues)
+if one doesn't.
 
 **Cloning the repo directly** is the last-resort path — only needed if
 you're developing the skill itself, not using it. See
@@ -69,21 +99,29 @@ numbers through the deterministic engine, and comes back with a
 percentile, a z-score, which reference standard it used, and any data
 quality flags — not a number it computed itself.
 
-Want to see this on a real, fuller patient record first?
+Want to see this on a fuller patient record first?
 [`demo/warren_synthea.md`](demo/warren_synthea.md) walks through a
 complete FHIR bundle end to end, including the automatic WHO→CDC
 handoff as the patient ages.
 
 ## Bring your own data
 
-The skill accepts three input shapes — tell your agent which one you have,
-or just hand it the file and let it figure out which adapter applies:
+The skill accepts two real-world input shapes — tell your agent which one
+you have, or just hand it the file and let it figure out which adapter
+applies:
 
 | Your data looks like | What happens |
 |---|---|
 | A FHIR R4 `Bundle` (one `Patient` + `Observation`s) | [`adapters/fhir_r4.py`](adapters/fhir_r4.py) maps it in |
-| Synthea's `patients.csv` + `observations.csv` export | [`adapters/synthea.py`](adapters/synthea.py) maps it in |
 | A spreadsheet / CSV / JSON you already have | [`adapters/flat.py`](adapters/flat.py) — see column spec below |
+
+**Testing or demoing without real patient data?**
+[`adapters/synthea.py`](adapters/synthea.py) maps in the CSV export format
+produced by [Synthea](https://github.com/synthetichealth/synthea), MITRE's
+synthetic-patient generator — entirely fake data, never a real person. It's
+what this repo's own tests, evals, and demo (`demo/warren_synthea.md`) run
+against, and it's a convenient way to try the skill out before pointing it
+at anything real.
 
 For the flat CSV/JSON path, each row/record needs these columns:
 `patient_id`, `sex` (`male`/`female`), `birth_date`, `observation_date`,

@@ -1,6 +1,6 @@
 # Eval scenario fixtures
 
-Unlike `tests/fixtures/` (real Synthea output), these are hand-constructed
+Unlike `tests/fixtures/` (genuine Synthea tool output), these are hand-constructed
 to exercise a specific behavior:
 
 - `implausible_weight.csv` — one synthetic 18-month-old with a weight of
