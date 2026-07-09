@@ -15,8 +15,6 @@ arithmetic.
 
 ![Example growth chart: weight, length/height, BMI, and head-circumference-for-age percentile curves with a patient's trajectory plotted on top](assets/growth-chart-example.png)
 
-*A real, unedited screenshot of this skill's chart output.*
-
 ## Install
 
 | Agent | Install |
@@ -27,11 +25,7 @@ arithmetic.
 | OpenClaw | `openclaw skills install git:smallinaUCSD/growth-percentile-skill` |
 | OpenCode, Grok Build, Cursor, or any other agent | Clone this repo and point the agent at `SKILL.md` (each has its own skills directory, e.g. `.opencode/skills/`, `.grok/skills/`, `.cursor/rules/`) |
 
-This isn't limited to coding agents. Anything that can read a `SKILL.md`
-file and run a shell command can use this skill. Nothing else to
-install: the engine itself is pure Python standard library.
-
-## Get started
+## Getting started
 
 Ask your agent, in plain English:
 
@@ -43,13 +37,12 @@ numbers through the deterministic engine, and replies with a percentile,
 a z-score, which reference standard it used, and any data-quality flags,
 never a number it computed itself.
 
-## What it can do
+## What it can also do
 
 Hand it real patient data in almost any shape:
 
-> I have this patient's records in a FHIR bundle at
-> `~/data/patient.json`. Calculate their growth percentiles and flag
-> anything unusual.
+> I have this patient's records in a <FHIR bundle, CSV File, other data format> at
+> `~/data/filename`. Calculate their growth percentiles.
 
 and it comes back with something like:
 
@@ -81,12 +74,10 @@ handoff partway through.
 ## Bring your own data
 
 Known formats, a FHIR R4 bundle or Synthea's CSV export, are read
-directly and deterministically. Anything else (a spreadsheet with
-unusual column names, mixed units, a pasted table, even messy or
-incomplete data) your agent reads it, converts weights/heights to kg/cm
-and ages to months, and figures out sex from whatever column and values
-your data uses (`sex` or `gender`, `M`/`F` or `male`/`female`). If sex is
-genuinely missing, your agent will ask rather than guess, since it
+directly and deterministically. Anything else (messy data) your agent reads it, 
+converts weights/heights to kg/cm and ages to months, and figures out sex from 
+whatever column and values your data uses (`sex` or `gender`, `M`/`F` or `male`/`female`). 
+If sex is  missing, your agent will ask rather than guess, since it
 changes which reference chart applies.
 
 If your data doesn't fit cleanly into any of this, just tell your agent
@@ -95,11 +86,9 @@ and it can usually still work it out.
 ## How it works
 
 The math is [Cole's LMS method](references/METHODOLOGY.md), the same
-transform the CDC and WHO use to publish their own growth charts,
-implemented once in a small frozen engine, and never touched by the
-model. WHO's 2006 standards are used for ages 0 to under 24 months,
-CDC's 2000 charts (plus the 2022 extended-BMI method for severe obesity)
-for 24 months to 20 years, matching CDC/AAP guidance, selected
+transform the CDC and WHO use to publish their own growth charts. 
+WHO's 2006 standards are used for ages 0 to under 24 months,
+CDC's 2000 charts for 24 months to 20 years, matching CDC/AAP guidance, selected
 automatically from the patient's age.
 
 ## Learn more
